@@ -1,0 +1,10 @@
+title: "Racketで学ぶ生命のゲーム"
+summary: "Racket でコンウェイのライフゲームを作りながら、関数型プログラミングとデザインレシピを学ぶ入門書。執筆・公開は Grok 4.5 協業。EPUB 生成前に Zenn で章単位公開する。"
+topics: ["Racket", "GameOfLife", "関数型プログラミング", "プログラミング入門"]
+published: true
+price: 0
+# 初回公開: 序章のみ chapters に載せる（Issue #27 Q3）
+# 承認後に ch01-basics / ch04-life-rules / ch05-display を順次追加
+chapters:
+  - intro
+toc_depth: 2
