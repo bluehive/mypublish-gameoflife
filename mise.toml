@@ -6,7 +6,7 @@
 # • wt:setup / wt:clean … 固定パス ${HOME}/my-worktree（1 本だけ）
 # • wt:setup-append-branch … 既存 experimental 先端から別 path に枝を足す（複数可）
 # • wt:setup / wt:clean / wt:setup-append-branch はメインリポジトリ側で実行するのが安全。
-# • wt:grok はメインでも worktree でも実行可（固定 path 向け）。
+# • wt:grok は cwd が git worktree ならそこ優先、無ければ ${HOME}/my-worktree にフォールバック。
 # • 既定ブランチは main（無ければ master）。
 # • 実験 worktree ブランチの作成はユーザーが実行する（Issue #27）。
 
@@ -239,26 +239,41 @@ echo "              git -C $MAIN_ROOT branch -d $branch   # 任意"
 '''
 
 [tasks."wt:grok"]
-description = "固定 worktree (${HOME}/my-worktree) で Grok Build 起動"
+description = "Grok Build 起動（cwd の worktree 優先、无ければ ${HOME}/my-worktree）"
 shell = "bash -c"
 run = '''
 set -euo pipefail
-WORKTREE_DIR="${HOME}/my-worktree"
+FIXED_WT="${HOME}/my-worktree"
+RESOLVE_SRC=""
 
-if [ ! -d "$WORKTREE_DIR" ] || ! git -C "$WORKTREE_DIR" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-  echo "❌ worktree がありません: $WORKTREE_DIR"
-  echo "   先にメインリポジトリで mise run wt:setup を実行してください。"
+# --- A. cwd 優先: いまのディレクトリが git worktree ならその toplevel ---
+if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  WORKTREE_DIR="$(git rev-parse --path-format=absolute --show-toplevel)"
+  RESOLVE_SRC="cwd"
+# --- B. フォールバック: 固定 path ---
+elif [ -d "$FIXED_WT" ] && git -C "$FIXED_WT" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  WORKTREE_DIR="$(git -C "$FIXED_WT" rev-parse --path-format=absolute --show-toplevel)"
+  RESOLVE_SRC="fixed"
+else
+  echo "❌ 対象 worktree が見つかりません。"
+  echo "   • git worktree 内で mise run wt:grok する（推奨: append path 含む）"
+  echo "   • または mise run wt:setup で固定 path を用意: $FIXED_WT"
   exit 1
 fi
 
 MAIN_ROOT="$(dirname "$(git -C "$WORKTREE_DIR" rev-parse --path-format=absolute --git-common-dir)")"
-if [ -f "$MAIN_ROOT/mise.toml" ]; then
+BRANCH="$(git -C "$WORKTREE_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "?")"
+
+# メイン側に新しい mise.toml があれば worktree へ同期（未追跡でもタスクが揃う）
+if [ -f "$MAIN_ROOT/mise.toml" ] && [ "$WORKTREE_DIR" != "$MAIN_ROOT" ]; then
   cp -f "$MAIN_ROOT/mise.toml" "$WORKTREE_DIR/mise.toml"
 fi
 
 echo "=== Grok Build (git-worktree-experimental) ==="
-echo "repo: $MAIN_ROOT"
-echo "cwd:  $WORKTREE_DIR"
+echo "resolve: $RESOLVE_SRC  (cwd 優先 / fixed=${FIXED_WT})"
+echo "repo:    $MAIN_ROOT"
+echo "worktree:$WORKTREE_DIR"
+echo "branch:  $BRANCH"
 git -C "$WORKTREE_DIR" status
 echo "メインリポジトリは安全です。この worktree で実験しますか？ (y/N)"
 read -r confirm
@@ -268,8 +283,8 @@ if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
 fi
 
 PROMPT='あなたは git-worktree-experimental スキルを使用中です。
-この worktree（固定パス '"$WORKTREE_DIR"'）上で実験的な変更を行ってください。
-メインリポジトリを直接壊さないこと。作業後は git status で差分を確認すること。
+この worktree（'"$WORKTREE_DIR"' / branch '"$BRANCH"'）上で実験的な変更を行ってください。
+メインリポジトリ（'"$MAIN_ROOT"'）を直接壊さないこと。作業後は git status で差分を確認すること。
 対象: mypublish-gameoflife（Racket Game of Life 執筆）。'
 
 exec grok --cwd "$WORKTREE_DIR" "$PROMPT"
