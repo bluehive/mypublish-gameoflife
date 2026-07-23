@@ -5,7 +5,63 @@
 - **コード・執筆**: [Grok 4.5](https://x.ai) 協業
 - **公開**: [Zenn](https://zenn.dev) 本 → 最終確認後に EPUB / Kindle
 - **マスター Issue**: [my-grok-task-2026#27](https://github.com/bluehive/my-grok-task-2026/issues/27)
+- **本リポジトリ Issue**: [#1 Advanced Student (htdp/asl)](https://github.com/bluehive/mypublish-gameoflife/issues/1)（p0）
 - **ライセンス**: [MIT](./LICENSE)
+
+## この README の目次
+
+- [本の目次](#本の目次)
+- [言語方針: Advanced Student](#言語方針-advanced-student-lang-htdpasl)
+- [正本](#正本)
+- [フォルダ構成](#フォルダ構成)
+- [開発フロー（Zenn → EPUB）](#開発フローzenn--epub)
+- [セットアップ](#セットアップ)
+- [よく使うタスク](#よく使うタスク)
+- [ローカル CI（テスト / watch）](#ローカル-ciテスト--watch)
+- [7月末の成功定義](#7月末の成功定義2733)
+- [移行元](#移行元)
+
+## 本の目次
+
+正本は `books/racket-game-of-life/`。詳細ロードマップは [`notes/racket-game-of-life/outline.md`](notes/racket-game-of-life/outline.md)。
+
+| 章 | タイトル | 原稿 | コード | 状態 |
+|----|----------|------|--------|------|
+| 序章 | なぜRacketか——ゲームで学ぶ関数型 | [intro.md](books/racket-game-of-life/intro.md) | — | 初稿 |
+| 第1章 | Racketの基礎——式と関数 | [ch01-basics.md](books/racket-game-of-life/ch01-basics.md) | [ch01-basics.rkt](code/ch01-basics.rkt) | 初稿 + ASL |
+| 第2章 | 再帰——Racketの核心 | [ch02-recursion.md](books/racket-game-of-life/ch02-recursion.md) | — | 目次のみ |
+| 第3章 | データ構造——グリッドを表現する | [ch03-grid.md](books/racket-game-of-life/ch03-grid.md) | — | 目次のみ |
+| 第4章 | ライフゲームのルールとセルオートマトン | [ch04-life-rules.md](books/racket-game-of-life/ch04-life-rules.md) | [ch04-life-rules.rkt](code/ch04-life-rules.rkt) | ドラフト + ASL |
+| 第5章 | 描画と対話——盤面を見る | [ch05-display.md](books/racket-game-of-life/ch05-display.md) | [ch05-display.rkt](code/ch05-display.rkt) | 骨格 + ASL |
+| 付録 | 環境・デバッグ・数表など | outline 参照 | — | 予定 |
+
+Zenn 公開中の章は `books/racket-game-of-life/config.yaml` の `chapters` のみ（現状: `intro`）。
+
+### 章の見取り図（短い）
+
+0. **序章** — なぜ Racket / なぜライフゲーム / 進め方  
+1. **第1章** — 式・`define`・条件・リスト・`posn`・近傍の入口  
+2. **第2章** — 再帰・高階関数（予定）  
+3. **第3章** — グリッド表現（予定）  
+4. **第4章** — B3/S23・`next-generation`・`check-expect`  
+5. **第5章** — ASCII 表示・パターンカタログ（骨格）  
+
+## 言語方針: Advanced Student (`#lang htdp/asl`)
+
+本のサンプルコードの**第一言語**は、HtDP の **Advanced Student Language**（`#lang htdp/asl`）です。
+
+| 狙い | 内容 |
+|------|------|
+| テストしやすさ | `check-expect` が言語に組み込み。例と実装を同じファイルに書ける |
+| エラーメッセージ | 学生向け言語レベルのため、素人にも読みやすい診断が出やすい |
+| 教育との接続 | デザインレシピ・BSL→ASL の段階と整合（関連: my-grok-task-2026#28） |
+| CLI でも検証 | ファイル末尾で `(require test-engine/racket-tests)` と `(test)` により `racket code/….rkt` で全テスト実行 |
+
+公式: [Advanced Student](https://docs.racket-lang.org/htdp-langs/advanced.html)
+
+- 座標は `make-posn` / `posn-x` / `posn-y`（ペアより HtDP 定番）
+- 真偽は `true` / `false`（`#true` / `#false` も可）
+- 本格 `#lang racket` + `rackunit` は発展・対照用に残す余地あり（現状の章コードは ASL）
 
 ## 正本
 
@@ -13,8 +69,8 @@
 |------|------|
 | `books/racket-game-of-life/*.md` | **原稿の正本**（Zenn book 章） |
 | `books/racket-game-of-life/config.yaml` | 本メタ・章順・`published` |
-| `code/*.rkt` | 章付属コード + rackunit |
-| `notes/racket-game-of-life/outline.md` | 目次・Phase1・#28–#30 リンク |
+| `code/*.rkt` | 章付属コード（`#lang htdp/asl` + `check-expect`） |
+| `notes/racket-game-of-life/outline.md` | 目次・Phase1・Issue リンク |
 
 EPUB は正本から生成します（`mise run book:combine` → `book:epub`）。
 
@@ -63,7 +119,9 @@ Zenn と GitHub の連携は [ダッシュボード](https://zenn.dev/dashboard)
 
 ```bash
 mise run zenn:preview    # localhost でプレビュー
-mise run test:racket     # raco test code/
+mise run test:racket     # code/*.rkt を racket 実行（ASL check-expect）
+mise run ci:test         # ローカル CI 一発（test:racket と同じゲート）
+mise run watch:test      # code/ 変更でテストを自動再実行
 mise run book:combine    # books → manuscript/.../book.md
 mise run book:epub       # 横書き EPUB + verify
 mise run wt:setup        # 実験 worktree（ユーザー実行）
@@ -71,19 +129,46 @@ mise run wt:grok         # worktree で Grok
 mise run wt:clean        # 固定 worktree 削除
 ```
 
+単体:
+
+```bash
+racket code/ch01-basics.rkt
+racket code/ch04-life-rules.rkt
+racket code/ch05-display.rkt
+```
+
+## ローカル CI（テスト / watch）
+
+| タスク | 用途 |
+|--------|------|
+| `mise run test:racket` | ASL ファイルを順に `racket` 実行（`check-expect`） |
+| `mise run ci:test` | PR/マージ前の一発ゲート（`test:racket` に依存） |
+| `mise run watch:test` | `code/**/*.rkt` を監視し、保存のたびに `test:racket` を再実行 |
+
+```bash
+# 一発
+mise run ci:test
+
+# 自動（別ターミナルで常駐）
+mise run watch:test
+# 同等: mise watch test:racket --clear
+```
+
+前提: `watchexec`（`mise watch` が利用。未導入なら `mise install` または `mise use -g watchexec@latest`）。
+
 ## 7月末の成功定義（#27 / #33）
 
 1. 序章＋第1章ドラフト
-2. 第4章（GoL ルール + rackunit）
-3. 第5章骨格（描画・パターン）
+2. 第4章（GoL ルール + テスト）— ASL `check-expect` 実験済
+3. 第5章骨格（描画・パターン）— ASL 骨格実験済
 
-関連: [#28](https://github.com/bluehive/my-grok-task-2026/issues/28) [#29](https://github.com/bluehive/my-grok-task-2026/issues/29) [#30](https://github.com/bluehive/my-grok-task-2026/issues/30)
+関連: [本repo#1](https://github.com/bluehive/mypublish-gameoflife/issues/1) [#28](https://github.com/bluehive/my-grok-task-2026/issues/28) [#29](https://github.com/bluehive/my-grok-task-2026/issues/29) [#30](https://github.com/bluehive/my-grok-task-2026/issues/30)
 
 ## 移行元
 
 - 旧正本: `draft-publish-books-2026/racket-game-of-life.md`（移行後は削除予定）
-- コード: `code/ch01-basics.rkt`（18 tests）
+- コード: `code/ch01-basics.rkt` ほか（`#lang htdp/asl`）
 
 ---
 
-*Init: 2026-07-23 / Issue #27 承認実装 / Grok 4.5*
+*Init: 2026-07-23 / Issue #27 承認実装 / Issue #1 ASL 実験 / Grok 4.5*

@@ -3,21 +3,32 @@
 > **正本リポジトリ**: [bluehive/mypublish-gameoflife](https://github.com/bluehive/mypublish-gameoflife)  
 > **Zenn book slug**: `racket-game-of-life`  
 > **原稿正本**: `books/racket-game-of-life/*.md`  
+> **サンプル言語**: **Advanced Student** — `#lang htdp/asl`（[本repo#1](https://github.com/bluehive/mypublish-gameoflife/issues/1) p0）  
 > **協業**: Grok 4.5 / Issue 駆動（my-grok-task-2026#27）  
 > **移行元**: `draft-publish-books-2026/racket-game-of-life.md`
+
+## 言語・テスト方針（#1）
+
+| 項目 | 方針 |
+|------|------|
+| `#lang` | `htdp/asl`（Advanced Student） |
+| テスト | `check-expect`（CLI は `test-engine/racket-tests` + `(test)`） |
+| 座標 | `make-posn` |
+| なぜ ASL か | テストが書きやすい・エラーが読みやすい・HtDP デザインレシピと接続 |
+| 実行 | `racket code/ch0N-….rkt` または `mise run test:racket` |
 
 ## Phase 1 最短パス（#27 トリアージ）
 
 1. **正本寄せ**: 執筆正本は本リポジトリの `books/racket-game-of-life/`（旧 draft から移行）
 2. **章ドラフト Issue をロードマップ配下にリンク**
+   - [本repo#1 ASL 実験](https://github.com/bluehive/mypublish-gameoflife/issues/1)（p0: 目次・ドラフト・コード・README）
    - [#28 HtDP Beginner 章](https://github.com/bluehive/my-grok-task-2026/issues/28)
    - [#29 Game of Life 章](https://github.com/bluehive/my-grok-task-2026/issues/29)
    - [#30 数学可視化章](https://github.com/bluehive/my-grok-task-2026/issues/30)
 3. **7/31 までの章順を 3 本に絞る**（成功定義）
-   - [x] 序章＋第1章ドラフト
-   - [ ] 第4章（GoL ルール + rackunit）
-   - [ ] 第5章骨格（描画・パターン）
-
+   - [x] 序章＋第1章ドラフト（ASL 化実験）
+   - [x] 第4章（GoL ルール + `check-expect`）— 実験 worktree
+   - [x] 第5章骨格（描画・パターン）— 同上
 ## 公開フロー（Zenn → EPUB）
 
 ```
@@ -116,7 +127,7 @@
 ### ツール（mise）
 
 - `mise run zenn:preview` — ローカル Zenn プレビュー
-- `mise run test:racket` — `raco test code/`
+- `mise run test:racket` — `racket code/*.rkt`（ASL `check-expect`）
 - `mise run book:combine` — books → manuscript/book.md
 - `mise run book:epub` — 横書き EPUB + verify
 - `mise run wt:setup` / `wt:grok` / `wt:clean` — git worktree 実験（**ユーザーが実行**）
@@ -128,11 +139,11 @@
 | 章 | 状態 | ファイル |
 |----|------|----------|
 | 序章 | 本文初稿 | books/.../intro.md |
-| 第1章 | 本文初稿 + code | books/.../ch01-basics.md, code/ch01-basics.rkt |
+| 第1章 | 本文初稿 + ASL code | books/.../ch01-basics.md, code/ch01-basics.rkt |
 | 第2章 | 目次のみ | ch02-recursion.md |
 | 第3章 | 目次のみ | ch03-grid.md |
-| 第4章 | 目次 → **7月必須** | ch04-life-rules.md |
-| 第5章 | 目次 → **7月骨格必須** | ch05-display.md |
+| 第4章 | 本文ドラフト + ASL code（実験） | ch04-life-rules.md, code/ch04-life-rules.rkt |
+| 第5章 | 骨格 + ASL code（実験） | ch05-display.md, code/ch05-display.rkt |
 
 ## 関連リポジトリ
 
