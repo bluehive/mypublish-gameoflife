@@ -5,16 +5,19 @@ title: "第1章　Racketの基礎——式と関数"
 > **この章のゴール**  
 > DrRacket で式を試し、`define` / `if` / リストで「小さな関数」を書けるようになる。  
 > ライフゲームの部品（生存判定・座標・近傍）を、すでに言葉にできる状態にする。  
-> **付属コード**: `code/ch01-basics.rkt`（`rackunit` の自己チェック付き）
+> **付属コード**: `code/ch01-basics.rkt`（`#lang htdp/asl` + `check-expect`）  
+> **言語**: Advanced Student（[Issue #1](https://github.com/bluehive/mypublish-gameoflife/issues/1)）
 
 #### 1.1 DrRacket の起動と REPL
 
 1. DrRacket を起動する（Windows 11 の手順は付録D）。
-2. 定義ウィンドウの先頭に必ず書く:
+2. 定義ウィンドウの先頭に書く（本の標準）:
 
 ```racket
-#lang racket
+#lang htdp/asl
 ```
+
+または、メニューで言語レベルを **Advanced Student** にする（同じ系統）。
 
 3. **Run**（実行）すると、下の**相互作用ウィンドウ**が REPL になる。
 4. そこに式を書いて Enter。結果がすぐ返る。
@@ -30,16 +33,17 @@ title: "第1章　Racketの基礎——式と関数"
   `(関数 引数1 引数2 …)`
 - 式は値を返す。副作用（画面表示など）は後から足す
 - 迷ったら小さく試す。本のコードも、まず REPL に貼って確認してよい
+- **なぜ ASL か**: `check-expect` でテストが書きやすく、エラーメッセージが読みやすい（README の「言語方針」も参照）
 
 **デザインレシピ（最短版）** — この章から毎回使う:
 
 | 手順 | やること |
 |------|----------|
-| 1. データ | 何を表す？（数、真偽、座標の組、リスト…） |
+| 1. データ | 何を表す？（数、真偽、`posn`、リスト…） |
 | 2. 署名 | 関数名・引数・返り値を一文で |
-| 3. 例 | 入出力を2〜3個書く |
+| 3. 例 | 入出力を2〜3個書く → そのまま `check-expect` にできる |
 | 4. 本体 | 実装する |
-| 5. 試し | REPL または `rackunit` で確認 |
+| 5. 試し | REPL または `check-expect`（`racket code/….rkt`） |
 
 #### 1.2 四則演算と `define`
 
@@ -109,7 +113,7 @@ title: "第1章　Racketの基礎——式と関数"
 画面に出す（副作用）:
 
 ```racket
-(printf "cell (~a, ~a) alive? ~a\n" 3 2 #t)
+(printf "cell (~a, ~a) alive? ~a\n" 3 2 true)
 ```
 
 - `~a` … 人間向け表示
@@ -123,14 +127,14 @@ title: "第1章　Racketの基礎——式と関数"
 ##### 真偽
 
 ```racket
-#t   ; true
-#f   ; false
+true    ; または #true / #t
+false   ; または #false / #f
 
-(= 3 3)      ; #t
-(< 2 5)      ; #t
-(and #t #f)  ; #f
-(or #t #f)   ; #t
-(not #f)     ; #t
+(= 3 3)         ; true
+(< 2 5)         ; true
+(and true false)  ; false
+(or true false)   ; true
+(not false)       ; true
 ```
 
 ##### `if` は式である
@@ -165,10 +169,10 @@ title: "第1章　Racketの基礎——式と関数"
 試し:
 
 ```racket
-(next-alive? #t 2)  ; #t  生存・近傍2 → 生き残る
-(next-alive? #t 1)  ; #f  過疎
-(next-alive? #f 3)  ; #t  誕生
-(next-alive? #f 2)  ; #f
+(next-alive? true 2)   ; true   生存・近傍2 → 生き残る
+(next-alive? true 1)   ; false  過疎
+(next-alive? false 3)  ; true   誕生
+(next-alive? false 2)  ; false
 ```
 
 `cond` で書くと同じ構造が読みやすいこともある:
@@ -185,32 +189,37 @@ title: "第1章　Racketの基礎——式と関数"
 
 #### 1.5 リストの基礎 — `list`, `first`, `rest`
 
-ライフゲームの盤面は、後の章で「生存セルのリスト」として表す。
+ライフゲームの盤面は、後の章で「生存セルのリスト」として表す。  
+座標は HtDP / ASL の定番 **`posn`** を使う。
 
 ```racket
 (define sample-cells
-  '((3 . 2) (4 . 3) (2 . 4) (3 . 4) (4 . 4)))
+  (list (make-posn 3 2)
+        (make-posn 4 3)
+        (make-posn 2 4)
+        (make-posn 3 4)
+        (make-posn 4 4)))
 ```
 
-- `'…` は quote。リストやペアを**データとして**書く
-- `(3 . 2)` は **ペア**（cons セル）。x と y の組に使う
-- `first` / `rest` … 先頭と残り（古い教材の car/cdr の代わりに本編ではこちらを優先）
+- `make-posn` / `posn-x` / `posn-y` … 2D 点
+- `first` / `rest` … 先頭と残り
+- `empty?` / `empty` … 空リスト
 
 ```racket
-(first sample-cells)           ; => (3 . 2)
-(rest sample-cells)            ; => ((4 . 3) …)
-(empty? '())                   ; => #t
-(cons '(1 . 1) sample-cells)   ; 先頭に足した**新しい**リスト
+(first sample-cells)              ; => (make-posn 3 2)
+(rest sample-cells)               ; => (list (make-posn 4 3) …)
+(empty? empty)                    ; => true
+(cons (make-posn 1 1) sample-cells)  ; 先頭に足した**新しい**リスト
 ```
 
-所属判定:
+所属判定（ASL の `member?`）:
 
 ```racket
 (define (alive? cells cell)
-  (and (member cell cells) #t))
+  (member? cell cells))
 
-(alive? sample-cells '(4 . 4))  ; #t
-(alive? sample-cells '(0 . 0))  ; #f
+(alive? sample-cells (make-posn 4 4))  ; true
+(alive? sample-cells (make-posn 0 0))  ; false
 ```
 
 リストの長さ（再帰の予告）:
@@ -225,8 +234,8 @@ title: "第1章　Racketの基礎——式と関数"
 `map` / `filter` は第2章の主役だが、味見だけ:
 
 ```racket
-(map car sample-cells)  ; 各セルの x 座標のリスト
-(filter (lambda (c) (= (car c) 4)) sample-cells)
+(map posn-x sample-cells)  ; 各セルの x 座標のリスト
+(filter (lambda (c) (= (posn-x c) 4)) sample-cells)
 ```
 
 **P1-8** 自分の好きな3セルのリスト `my-cells` を作れ。  
@@ -266,25 +275,25 @@ title: "第1章　Racketの基礎——式と関数"
 
 #### 1.7 ベクトル — 位置とずらし
 
-高校1年レベルの2Dベクトルを、ペア `(vx . vy)` で表す。
+高校1年レベルの2Dベクトルを、`posn` で表す。
 
 ```racket
 (define (v-add a b)
-  (cons (+ (car a) (car b))
-        (+ (cdr a) (cdr b))))
+  (make-posn (+ (posn-x a) (posn-x b))
+             (+ (posn-y a) (posn-y b))))
 
 (define (v-scale k a)
-  (cons (* k (car a))
-        (* k (cdr a))))
+  (make-posn (* k (posn-x a))
+             (* k (posn-y a))))
 ```
 
 セルの近傍8マスは「自分＋デルタ」:
 
 ```racket
 (define neighbor-deltas
-  '((-1 . -1) (0 . -1) (1 . -1)
-    (-1 .  0)          (1 .  0)
-    (-1 .  1) (0 .  1) (1 .  1)))
+  (list (make-posn -1 -1) (make-posn 0 -1) (make-posn 1 -1)
+        (make-posn -1  0)                   (make-posn 1  0)
+        (make-posn -1  1) (make-posn 0  1) (make-posn 1  1)))
 
 (define (shift-cell cell delta)
   (v-add cell delta))
@@ -292,8 +301,8 @@ title: "第1章　Racketの基礎——式と関数"
 (define (cell-neighbors cell)
   (map (lambda (d) (shift-cell cell d)) neighbor-deltas))
 
-(cell-neighbors '(3 . 2))
-;; => ((2 . 1) (3 . 1) (4 . 1) (2 . 2) (4 . 2) (2 . 3) (3 . 3) (4 . 3))
+(cell-neighbors (make-posn 3 2))
+;; => 8 個の posn（自分以外の周囲）
 ```
 
 これは後の `count-neighbors` / `next-generation`（第4章）の土台そのもの。
@@ -354,7 +363,8 @@ draft-publish-books-2026/code/ch01-basics.rkt
 |------|------|
 | 2026-06-16 | Issues #8–#12 反映（目次改訂） |
 | 2026-07-11 | 7月優先を確定。成功定義=3章ドラフト。**序章本文** を初稿化。正本は本ファイル。 |
-| 2026-07-11 | **第1章本文** 初稿 + `code/ch01-basics.rkt`（rackunit 付き） |
+| 2026-07-11 | **第1章本文** 初稿 + `code/ch01-basics.rkt` |
+| 2026-07-23 | **ASL 化**（`#lang htdp/asl` + `check-expect` / Issue #1） |
 
 ---
 

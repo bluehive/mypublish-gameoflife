@@ -3,10 +3,16 @@
 ;; See LICENSE file in the project root for full license text.
 ;;
 ;; 第1章 サンプル: Racketの基礎——式と関数
-;; 正本: ../racket-game-of-life.md
-;; DrRacket で開き、定義ウィンドウを Run したあと相互作用ウィンドウで試す。
+;; 言語: Advanced Student (#lang htdp/asl)
+;; 正本: books/racket-game-of-life/ch01-basics.md
+;;
+;; DrRacket: 言語レベルを Advanced Student にするか、この #lang のまま Run。
+;; CLI:     racket code/ch01-basics.rkt
+;;          （末尾の (test) で check-expect 結果を表示）
 
-#lang racket
+#lang htdp/asl
+
+(require test-engine/racket-tests)
 
 ;; ------------------------------------------------------------
 ;; 1.2 四則と define
@@ -68,11 +74,16 @@
 
 ;; ------------------------------------------------------------
 ;; 1.5 リストの基礎
+;; セル座標は make-posn（HtDP / ASL の定番）
 ;; ------------------------------------------------------------
 
-;; 生存セルは (x . y) のペアのリスト
+;; 生存セルは posn のリスト
 (define sample-cells
-  '((3 . 2) (4 . 3) (2 . 4) (3 . 4) (4 . 4))) ; グライダー断片
+  (list (make-posn 3 2)
+        (make-posn 4 3)
+        (make-posn 2 4)
+        (make-posn 3 4)
+        (make-posn 4 4)))
 
 (define (first-cell cells)
   (first cells))
@@ -80,9 +91,9 @@
 (define (rest-cells cells)
   (rest cells))
 
-;; セルがリストに含まれるか（member は見つかると残りリストを返すので and で真偽に）
+;; セルがリストに含まれるか
 (define (alive? cells cell)
-  (and (member cell cells) #t))
+  (member? cell cells))
 
 ;; リストの長さ（再帰の予告。第2章で深掘り）
 (define (my-length xs)
@@ -92,10 +103,10 @@
 
 ;; map / filter の予告（第2章・第3章で本格利用）
 (define (xs-of-cells cells)
-  (map car cells))
+  (map posn-x cells))
 
 (define (cells-with-x cells x)
-  (filter (lambda (c) (= (car c) x)) cells))
+  (filter (lambda (c) (= (posn-x c) x)) cells))
 
 ;; ------------------------------------------------------------
 ;; 1.6 三角関数（ゲーム・可視化の入口）
@@ -105,32 +116,31 @@
 (define (deg->rad deg)
   (* deg (/ pi 180)))
 
-;; 単位円上の点（アニメの往復運動などに使える）
+;; 単位円上の点（リストで x y を返す）
 (define (unit-circle-point deg)
-  (let ([t (deg->rad deg)])
+  (local [(define t (deg->rad deg))]
     (list (cos t) (sin t))))
 
 ;; ------------------------------------------------------------
-;; 1.7 ベクトル（高校1年レベル）
+;; 1.7 ベクトル（高校1年レベル）— posn で表す
 ;; ------------------------------------------------------------
 
-;; 2D ベクトルを (vx . vy) で表す
 (define (v-add a b)
-  (cons (+ (car a) (car b))
-        (+ (cdr a) (cdr b))))
+  (make-posn (+ (posn-x a) (posn-x b))
+             (+ (posn-y a) (posn-y b))))
 
 (define (v-scale k a)
-  (cons (* k (car a))
-        (* k (cdr a))))
+  (make-posn (* k (posn-x a))
+             (* k (posn-y a))))
 
 ;; セル座標をベクトル加算でずらす（近傍計算の素）
 (define (shift-cell cell delta)
   (v-add cell delta))
 
 (define neighbor-deltas
-  '((-1 . -1) (0 . -1) (1 . -1)
-    (-1 .  0)          (1 .  0)
-    (-1 .  1) (0 .  1) (1 .  1)))
+  (list (make-posn -1 -1) (make-posn 0 -1) (make-posn 1 -1)
+        (make-posn -1  0)                   (make-posn 1  0)
+        (make-posn -1  1) (make-posn 0  1) (make-posn 1  1)))
 
 (define (cell-neighbors cell)
   (map (lambda (d) (shift-cell cell d)) neighbor-deltas))
@@ -141,41 +151,35 @@
 
 ;; 行のリストとしての小さな行列（表示用）
 (define tiny-grid
-  '((0 1 0)
-    (0 0 1)
-    (1 1 1)))
+  (list (list 0 1 0)
+        (list 0 0 1)
+        (list 1 1 1)))
 
 (define (grid-ref grid r c)
   (list-ref (list-ref grid r) c))
 
 ;; ------------------------------------------------------------
-;; 自己チェック（Run すると #t が並ぶ想定）
+;; 自己チェック（check-expect — ASL の標準テスト）
 ;; ------------------------------------------------------------
 
-(module+ test
-  (require rackunit)
-  (check-equal? (square 8) 64)
-  (check-equal? (average 2 8) 5)
-  (check-equal? (greet "Racket") "Hello, Racket!")
-  (check-true (survives? 2))
-  (check-true (survives? 3))
-  (check-false (survives? 1))
-  (check-true (births? 3))
-  (check-false (births? 2))
-  (check-true (next-alive? #t 2))
-  (check-true (next-alive? #f 3))
-  (check-false (next-alive? #t 0))
-  (check-equal? (first-cell sample-cells) '(3 . 2))
-  (check-true (alive? sample-cells '(4 . 4)))
-  (check-false (alive? sample-cells '(0 . 0)))
-  (check-equal? (my-length sample-cells) 5)
-  (check-equal? (v-add '(1 . 2) '(3 . 4)) '(4 . 6))
-  (check-equal? (length (cell-neighbors '(0 . 0))) 8)
-  (check-equal? (grid-ref tiny-grid 2 0) 1)
-  (printf "ch01-basics: all tests passed\n"))
+(check-expect (square 8) 64)
+(check-expect (average 2 8) 5)
+(check-expect (greet "Racket") "Hello, Racket!")
+(check-expect (survives? 2) true)
+(check-expect (survives? 3) true)
+(check-expect (survives? 1) false)
+(check-expect (births? 3) true)
+(check-expect (births? 2) false)
+(check-expect (next-alive? true 2) true)
+(check-expect (next-alive? false 3) true)
+(check-expect (next-alive? true 0) false)
+(check-expect (first-cell sample-cells) (make-posn 3 2))
+(check-expect (alive? sample-cells (make-posn 4 4)) true)
+(check-expect (alive? sample-cells (make-posn 0 0)) false)
+(check-expect (my-length sample-cells) 5)
+(check-expect (v-add (make-posn 1 2) (make-posn 3 4)) (make-posn 4 6))
+(check-expect (length (cell-neighbors (make-posn 0 0))) 8)
+(check-expect (grid-ref tiny-grid 2 0) 1)
 
-;; 相互作用ウィンドウ用のデモ呼び出し（コメントを外して試せる）
-;; (board-pixel-width)
-;; (next-alive? #t 3)
-;; (cell-neighbors '(3 . 2))
-;; (unit-circle-point 90)
+;; CLI / 自動化用。DrRacket では Run 時にテスト結果も出る。
+(test)

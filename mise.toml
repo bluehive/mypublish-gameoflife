@@ -12,6 +12,8 @@
 
 [tools]
 node = "22"
+# mise watch / watch:test 用（ローカル CI 自動再実行）
+watchexec = "2"
 
 [tasks."zenn:preview"]
 description = "Zenn CLI プレビュー (localhost:8000)"
@@ -22,26 +24,38 @@ description = "Zenn プレビュー（ポート指定: PORT=3000 mise run zenn:p
 run = "npx zenn preview --port ${PORT:-3000}"
 
 [tasks."test:racket"]
-description = "code/ 配下の rackunit を実行"
+description = "code/ 配下の ASL (htdp/asl) を racket で実行（check-expect + test）"
+# mise watch test:racket がこの sources を監視する
+sources = ["code/**/*.rkt", "code/*.rkt"]
+outputs = []
 shell = "bash -c"
 run = '''
 set -euo pipefail
-if ! command -v raco >/dev/null 2>&1; then
-  echo "❌ raco が見つかりません。Racket をインストールしてください。"
+if ! command -v racket >/dev/null 2>&1; then
+  echo "racket not found. Install Racket first."
   exit 1
 fi
 shopt -s nullglob
-files=(code/*.rkt code/**/*.rkt)
-if [ ${#files[@]} -eq 0 ]; then
-  echo "ℹ️  テスト対象 .rkt がありません"
-  exit 0
-fi
+found=0
 for f in code/*.rkt; do
   [ -f "$f" ] || continue
-  echo "=== raco test $f ==="
-  raco test "$f"
+  found=1
+  echo "=== racket $f ==="
+  racket "$f"
 done
+if [ "$found" -eq 0 ]; then
+  echo "no .rkt files under code/"
+fi
 '''
+
+[tasks."ci:test"]
+description = "ローカル CI ゲート: ASL テスト一発（マージ前・push 前に推奨）"
+depends = ["test:racket"]
+
+[tasks."watch:test"]
+description = "code/ 変更で test:racket を自動再実行（mise watch + watchexec）"
+# 常駐タスク。Ctrl+C で停止。sources は test:racket 側を参照する
+run = "mise watch test:racket --clear --on-busy-update=queue"
 
 [tasks."book:combine"]
 description = "books/ 章を manuscript/.../book.md に結合"
