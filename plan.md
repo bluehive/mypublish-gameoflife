@@ -108,9 +108,9 @@
 |----|------|------|------|------|
 | P-01 | P0 | `plan.md` をルートに置き作業駆動の起点にする | **完了** | 本ファイル |
 | P-02 | P0 | コード変更時は必ず `ci:test` を通す運用を継続 | 継続 | README のタスク参照 |
-| P-03 | P1 | 第5章: `pattern-pulsar` 座標の本実装 + check-expect | 未着手 | ch05 骨格の穴 |
-| P-04 | P1 | 第4章: テスト観点の文章と ASL コードの用語を完全一致 | 未着手 | rackunit 表記の残り確認 |
-| P-05 | P1 | 第2章ドラフト（再帰・map/filter）+ 可能なら code | 未着手 | README 目次の「目次のみ」解消 |
+| P-03 | P1 | 第5章: `pattern-pulsar` 座標の本実装 + check-expect | **完了** | Issue #2 |
+| P-04 | P1 | 第4章: テスト観点の文章と ASL コードの用語を完全一致 | **完了** | Issue #2 |
+| P-05 | P1 | 第2章ドラフト（再帰・map/filter）+ 可能なら code | **完了** | Issue #2 / ch02-recursion.rkt |
 | P-06 | P2 | 第3章ドラフト（グリッド・posn リスト以外の表現） | 未着手 | |
 | P-07 | P2 | 付録 D 環境構築の独立 md 化（要なら） | 未着手 | 今は README メモで可 |
 | P-08 | P2 | Zenn: ch01 を chapters に載せる案をユーザー承認取り | 未着手 | **承認必須** |
@@ -127,18 +127,19 @@
 
 | 時刻帯 | 内容 | 結果 |
 |--------|------|------|
+| — | **Issue #2**: P-03 パルサー + P-04 ch04 用語 + P-05 第2章ドラフト/code | experimental で実装・commit 予定 |
 | — | worktree で ch04/ch05 ドラフト + rackunit 実験 → ASL 化 | 完了。`#lang htdp/asl` + check-expect |
 | — | Issue #1 読み取り・承認後に README/目次/コード/outline 更新 | 完了 |
 | — | README 目次・mise `ci:test` / `watch:test`・main マージ・push | 完了（merge `63a4065` 系） |
 | — | outline.md 削除、付録を README へ統合 | 完了（`c9d775c`） |
-| — | **plan.md 作成**（作業予定・進捗・駆動方針） | 完了（本エントリ） |
+| — | **plan.md 作成**（作業予定・進捗・駆動方針） | 完了 |
 
 **現状スナップショット**
 
 - 目次正本: README のみ  
-- コード: ch01 / ch04 / ch05 が ASL で `ci:test` 緑  
+- コード: ch01 / **ch02** / ch04 / ch05 が ASL  
 - Zenn chapters: `intro` のみ（変更しない）  
-- 次の推奨: P-03（パルサー）または P-05（第2章）をユーザーと合意して着手  
+- 次の推奨: P-06 第3章、または Issue #2 のユーザー確認後に main マージ  
 
 ---
 

@@ -252,7 +252,8 @@ racket code/ch04-life-rules.rkt
 1. **初期配置**をリストで置く（パターン関数でも、手書きでも）  
 2. **世代ループ**: `(step-n world n)` または REPL で `(define w2 (next-generation w1))`  
 3. **観察**: 第5章の ASCII / 画像で見る  
-4. **テスト**: パターンの不変条件を `rackunit` に残す  
+4. **テスト**: パターンの不変条件を `check-expect` に残す  
+
 
 二次元リスト（密行列）版は `my-racket/lifeofgame.rkt` にもある。教育用には:
 

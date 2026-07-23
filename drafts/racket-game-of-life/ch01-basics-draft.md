@@ -353,7 +353,7 @@ false   ; または #false / #f
 draft-publish-books-2026/code/ch01-basics.rkt
 ```
 
-を DrRacket で開き Run。`(module+ test)` が通れば、この章の核はクリア。
+を DrRacket で開き Run。末尾の `check-expect` と `(test)` が通れば、この章の核はクリア。
 
 ---
 

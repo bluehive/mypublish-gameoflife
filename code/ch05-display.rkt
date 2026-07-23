@@ -160,8 +160,24 @@
   (list (make-posn 1 0) (make-posn 2 0) (make-posn 3 0)
         (make-posn 0 1) (make-posn 1 1) (make-posn 2 1)))
 
-;; パルサーは座標が大きく、骨格では空リスト（プレースホルダ）
-(define pattern-pulsar empty)
+;; パルサー（周期 3・48 セルの位相）
+;; 13×13 バウンディング。世代 0→1→2→0 で戻る（中間世代の個体数は変動しうる）
+(define pattern-pulsar
+  (list
+   (make-posn 2 0) (make-posn 3 0) (make-posn 4 0)
+   (make-posn 8 0) (make-posn 9 0) (make-posn 10 0)
+   (make-posn 0 2) (make-posn 5 2) (make-posn 7 2) (make-posn 12 2)
+   (make-posn 0 3) (make-posn 5 3) (make-posn 7 3) (make-posn 12 3)
+   (make-posn 0 4) (make-posn 5 4) (make-posn 7 4) (make-posn 12 4)
+   (make-posn 2 5) (make-posn 3 5) (make-posn 4 5)
+   (make-posn 8 5) (make-posn 9 5) (make-posn 10 5)
+   (make-posn 2 7) (make-posn 3 7) (make-posn 4 7)
+   (make-posn 8 7) (make-posn 9 7) (make-posn 10 7)
+   (make-posn 0 8) (make-posn 5 8) (make-posn 7 8) (make-posn 12 8)
+   (make-posn 0 9) (make-posn 5 9) (make-posn 7 9) (make-posn 12 9)
+   (make-posn 0 10) (make-posn 5 10) (make-posn 7 10) (make-posn 12 10)
+   (make-posn 2 12) (make-posn 3 12) (make-posn 4 12)
+   (make-posn 8 12) (make-posn 9 12) (make-posn 10 12)))
 
 (define (union-cells a b)
   (sort-cells (union-list a b)))
@@ -228,5 +244,11 @@
 (check-expect
  (length (union-cells pattern-block (place pattern-block 10 0)))
  8)
+
+;; パルサー: 48 セル・周期 3・1 世代では形が変わる
+(check-expect (length pattern-pulsar) 48)
+(check-expect (same-world? (step-n pattern-pulsar 3) pattern-pulsar) true)
+(check-expect (same-world? (next-generation pattern-pulsar) pattern-pulsar) false)
+(check-expect (same-world? (step-n pattern-pulsar 6) pattern-pulsar) true)
 
 (test)
