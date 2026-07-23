@@ -3,369 +3,377 @@ title: "第1章　Racketの基礎——式と関数"
 ---
 
 > **この章のゴール**  
-> DrRacket で式を試し、`define` / `if` / リストで「小さな関数」を書けるようになる。  
-> ライフゲームの部品（生存判定・座標・近傍）を、すでに言葉にできる状態にする。  
-> **付属コード**: `code/ch01-basics.rkt`（`#lang htdp/asl` + `check-expect`）  
-> **言語**: Advanced Student（[Issue #1](https://github.com/bluehive/mypublish-gameoflife/issues/1)）
+> BSL の基本構文をチートシートとして一通り触れ、小さな関数と `check-expect` が書ける。  
+> **参照**: [howtocode cheatsheet](https://howtocode.pages.dev/cheatsheet) / [htdp_templates](https://howtocode.pages.dev/htdp_templates)  
+> **付属コード**: `code/ch01-basics.rkt`（`#lang htdp/bsl`）
 
-#### 1.1 DrRacket の起動と REPL
-
-1. DrRacket を起動する（Windows 11 の手順は付録D）。
-2. 定義ウィンドウの先頭に書く（本の標準）:
+#### 1.1 基本データ型
 
 ```racket
-#lang htdp/asl
+123
+"yayy"
+#true
+#false
+;; true / false とも書ける（BSL）
 ```
 
-または、メニューで言語レベルを **Advanced Student** にする（同じ系統）。
-
-3. **Run**（実行）すると、下の**相互作用ウィンドウ**が REPL になる。
-4. そこに式を書いて Enter。結果がすぐ返る。
+#### 1.2 式（前置記法）
 
 ```racket
-(+ 1 2 3)          ; => 6
-(* 2 (+ 3 4))      ; => 14
+;; 規則: (演算子 引数 …)
+(+ 2 4)
+(+ 2 4 (* 3 6 (+ 1 1)))
 ```
 
-ポイント:
+序章の評価規則を復習しながら、相互作用ウィンドウで試す。
 
-- **前置記法**: 演算子も関数も、括弧の先頭に来る  
-  `(関数 引数1 引数2 …)`
-- 式は値を返す。副作用（画面表示など）は後から足す
-- 迷ったら小さく試す。本のコードも、まず REPL に貼って確認してよい
-- **なぜ ASL か**: `check-expect` でテストが書きやすく、エラーメッセージが読みやすい（README の「言語方針」も参照）
-
-**デザインレシピ（最短版）** — この章から毎回使う:
-
-| 手順 | やること |
-|------|----------|
-| 1. データ | 何を表す？（数、真偽、`posn`、リスト…） |
-| 2. 署名 | 関数名・引数・返り値を一文で |
-| 3. 例 | 入出力を2〜3個書く → そのまま `check-expect` にできる |
-| 4. 本体 | 実装する |
-| 5. 試し | REPL または `check-expect`（`racket code/….rkt`） |
-
-#### 1.2 四則演算と `define`
-
-##### 数値と四則
+#### 1.3 定数 `define`
 
 ```racket
-(+ 10 3)    ; 13
-(- 10 3)    ; 7
-(* 10 3)    ; 30
-(/ 10 4)    ; 2.5  （整数同士でも有理数・実数になり得る）
-(quotient 10 4)  ; 2  整数除算
-(remainder 10 4) ; 2  余り
+(define WIDTH 30)
+(define HEIGHT 20)
+(define CELL-SIZE 15)
+
+(define BOARD-PIXEL-WIDTH (* WIDTH CELL-SIZE))
+;; => 450
 ```
 
-##### 名前を付ける — `define`
+**なぜ「引数ゼロの関数」ではなく定数か（BSL）**
+
+他の言語では「引数なしの関数」で幅を計算したくなります。
 
 ```racket
-(define width 30)
-(define height 20)
-(define cell-size 15)
-
-(define (board-pixel-width)
-  (* width cell-size))
-
-(board-pixel-width)  ; => 450
+;; Beginning Student ではこれはエラーになる
+;; (define (board-pixel-width) (* WIDTH CELL-SIZE))
 ```
 
-- `(define 名前 値)` … 定数やデータの名前
-- `(define (名前 引数…) 本体)` … 関数定義の糖衣構文  
-  下と同じ意味:
+BSL（Beginning Student）では、`(define (名前 引数…) …)` の形に**少なくとも1つの引数**が必要です。引数が無い「手続き呼び出し」は、この言語レベルでは教えません。
+
+代わりに次のどちらかにします。
+
+1. **定数**にする（値が決まっているとき）— 上の `BOARD-PIXEL-WIDTH`  
+2. **引数を取る関数**にする（入力で結果が変わるとき）— 例: `(define (scale n) (* n CELL-SIZE))`
+
+ライフ盤のピクセル幅は `WIDTH` と `CELL-SIZE` から一意に決まるので、本章では定数で十分です。
+
+#### 1.4 `if` と `cond`
 
 ```racket
-(define square
-  (lambda (x) (* x x)))
+(if (string=? "hi" "bye") "yarr" "meow")  ; => "meow"
+
+(define ran-num 3)
+(cond
+  [(< ran-num 3) "<3"]
+  [(= ran-num 3) "equal"]  ; => "equal"
+  [else "other"])
 ```
 
-##### 練習問題（手を動かす）
-
-**P1-1** `square` を定義し、`8` で `64` になることを確認せよ。  
-**P1-2** 2数の平均 `average` を定義せよ（ヒント: `/` と `+`）。  
-**P1-3** ライフ盤のピクセル高さ `board-pixel-height` を `height` と `cell-size` から定義せよ。
-
-模範（抜粋）:
+ライフ規則の1セル分（応用）:
 
 ```racket
-(define (square x) (* x x))
-(define (average a b) (/ (+ a b) 2))
-(define (board-pixel-height) (* height cell-size))
-```
-
-> Python 学習者向けメモ: `my-100-pon.rkt` には Python 風の「問題1〜」が並ぶが、本編は **Racket の自然な形**（`define`・式・リスト）で進める。出力は `print` より、まず**返り値**で考える。
-
-#### 1.3 `printf` と文字列
-
-デバッグや説明用に、文字列と表示を使う。
-
-```racket
-(string-append "Hello, " "Racket")  ; => "Hello, Racket"
-(string-length "Racket")            ; => 6
-
-(define (greet name)
-  (string-append "Hello, " name "!"))
-
-(greet "Racket")  ; => "Hello, Racket!"
-```
-
-画面に出す（副作用）:
-
-```racket
-(printf "cell (~a, ~a) alive? ~a\n" 3 2 true)
-```
-
-- `~a` … 人間向け表示
-- `~s` / `~v` … 読み戻し向き・デバッグ向き（付録Fでも再登場）
-
-**P1-4** `greet` を自分の名前で試し、文字列が返ることを確認せよ（`printf` しなくてもよい）。  
-**P1-5** `show-cell-label` のように、座標と生死を1行で出す関数を書け。
-
-#### 1.4 真偽値と条件分岐 `if`
-
-##### 真偽
-
-```racket
-true    ; または #true / #t
-false   ; または #false / #f
-
-(= 3 3)         ; true
-(< 2 5)         ; true
-(and true false)  ; false
-(or true false)   ; true
-(not false)       ; true
-```
-
-##### `if` は式である
-
-```racket
-(if 条件
-    真のときの式
-    偽のときの式)
-```
-
-どちらも**値を返す**。他言語の「文」としての if と違い、そのまま `define` の本体に置ける。
-
-##### ライフゲームへの最初の橋渡し
-
-ルールのうち「1セルの次状態」だけを切り出す:
-
-```racket
-;; 生きているセルは近傍 2 or 3 で生き残る
+;; 生きているセルは、近傍が 2 または 3 なら生き残る
 (define (survives? neighbors)
   (or (= neighbors 2) (= neighbors 3)))
 
-;; 死んでいるセルは近傍ちょうど 3 で誕生
+;; 死んでいるセルは、近傍がちょうど 3 なら誕生する
 (define (births? neighbors)
   (= neighbors 3))
 
+;; 今の生死と近傍数から、次の瞬間生きているか
 (define (next-alive? currently-alive? neighbors)
   (if currently-alive?
       (survives? neighbors)
       (births? neighbors)))
 ```
 
-試し:
+#### 1.5 関数
+
+ここでは「**名前を付けた計算**」の書き方を説明します。  
+`(define (関数名 引数…) 本体)` は、「引数を受け取って本体の式を評価し、その値を返す」という意味です。
 
 ```racket
-(next-alive? true 2)   ; true   生存・近傍2 → 生き残る
-(next-alive? true 1)   ; false  過疎
-(next-alive? false 3)  ; true   誕生
-(next-alive? false 2)  ; false
+;; square-of: 数 x を受け取り、x の2乗を返す
+(define (square-of x)
+  (* x x))
+
+;; greet: 文字列 name を受け取り、挨拶文を返す
+(define (greet name)
+  (string-append "Hello, " name "!"))
 ```
 
-`cond` で書くと同じ構造が読みやすいこともある:
+- `square-of` の本体 `(* x x)` … 掛け算の式そのものが返り値  
+- `greet` の本体 `string-append` … 文字列を連結した新しい文字列が返り値  
+
+**例を先に書く**とは、実装の細部を詰める前に、「入力がこうなら出力はこう」を先に固定することです。BSL ではそれを `check-expect` で書きます。
 
 ```racket
-(define (next-alive?/cond currently-alive? neighbors)
-  (cond
-    [currently-alive? (or (= neighbors 2) (= neighbors 3))]
-    [else (= neighbors 3)]))
+(check-expect (square-of 8) 64)
+(check-expect (greet "Racket") "Hello, Racket!")
 ```
 
-**P1-6** `survives?` を、近傍が 0〜8 の表にして頭の中（または紙）で埋めよ。  
-**P1-7** `next-alive?` と `next-alive?/cond` が同じ結果になる例を3つ REPL で確認せよ。
+意味: 「`(square-of 8)` を評価した結果は `64` であってほしい」。Run すると自動で照合されます。
 
-#### 1.5 リストの基礎 — `list`, `first`, `rest`
+**デザインレシピ**（HtDP / howtocode）は、関数を書くときの短い手順書です。本章では次の5つを使います（詳細とデータ別の型紙は **1.10**）。
 
-ライフゲームの盤面は、後の章で「生存セルのリスト」として表す。  
-座標は HtDP / ASL の定番 **`posn`** を使う。
+1. **データ** — 何を表すか（数、文字列、posn、リスト…）  
+2. **署名・目的** — 関数名・引数・返り値を一文で  
+3. **例** — `check-expect` で入出力を2つ以上  
+4. **本体** — 実装する  
+5. **試し・見直し** — Run してテストが通るか確認  
+
+「例を先に」は手順 3 を、手順 4 より前にやる、という習慣です。
+
+#### 1.6 構造体 `define-struct` と `posn`
+
+**構造体**は、「いくつかの値をひとまとめにしたデータ」です。  
+`define-struct` で型名とフィールド名を宣言すると、作る関数・取り出す関数・判定関数が自動で用意されます。
+
+ライフゲームでは、例えば「座標つきのセル」を自分で構造体にできます（教育用の一歩。本線の盤面はあとで `posn` のリストでも表します）。
 
 ```racket
-(define sample-cells
+;; Cell は x, y（整数座標）と alive?（生死）を持つ
+(define-struct cell (x y alive?))
+;; interp. 盤上の1マス。alive? が true なら生きている
+
+(define C1 (make-cell 3 2 true))   ; (3,2) に生きているセル
+(define C2 (make-cell 0 0 false))  ; (0,0) は死
+
+(cell-x C1)       ; => 3
+(cell-y C1)       ; => 2
+(cell-alive? C1)  ; => true
+(cell? C1)        ; => true
+(cell? 321)       ; => false
+```
+
+**`posn`** は BSL に最初からある「平面上の点」用の構造体です（自分で `define-struct` しなくてよい）。  
+第4章の本線では、生存セルだけを `make-posn` のリストで持つ書き方が中心になります（死セルはリストに載せない）。
+
+- `make-posn` … x と y から点を**作る**  
+- `posn-x` / `posn-y` … 点から座標を**取り出す**  
+- `posn?` … それが posn かどうか  
+
+```racket
+;; x=3, y=2 の点（生存セルの座標の一例）
+(define SAMPLE-CELL (make-posn 3 2))
+(posn-x SAMPLE-CELL)  ; => 3
+(posn-y SAMPLE-CELL)  ; => 2
+```
+
+`make-posn` の第1引数が横方向、第2引数が縦方向、と決めて本では一貫して使います。  
+`cell` 構造体は「生死もフィールドに持つ」練習、`posn` は「生きている座標だけ集める」本線、と役割を分けて覚えてください。
+
+#### 1.7 リスト（`cons` / `first` / `rest` / `empty`）
+
+リストは「0個以上の値を順番に並べたもの」です。BSL では次が基本操作です。
+
+- `empty` — 空のリスト（要素なし）  
+- `(cons 先頭 残りリスト)` — 先頭に1つ足した**新しい**リスト  
+- `(first リスト)` — 先頭の要素  
+- `(rest リスト)` — 先頭を除いた残り  
+- `(empty? リスト)` — 空なら true  
+- `(list a b c)` — `cons` を重ねた糖衣（読み書き用）  
+
+```racket
+;; 生存セル3個のリスト（posn が3つ）
+(define SAMPLE-CELLS
   (list (make-posn 3 2)
         (make-posn 4 3)
-        (make-posn 2 4)
-        (make-posn 3 4)
-        (make-posn 4 4)))
-```
+        (make-posn 2 4)))
+;; 上はだいたい次と同じ意味:
+;; (cons (make-posn 3 2)
+;;       (cons (make-posn 4 3)
+;;             (cons (make-posn 2 4) empty)))
 
-- `make-posn` / `posn-x` / `posn-y` … 2D 点
-- `first` / `rest` … 先頭と残り
-- `empty?` / `empty` … 空リスト
-
-```racket
-(first sample-cells)              ; => (make-posn 3 2)
-(rest sample-cells)               ; => (list (make-posn 4 3) …)
-(empty? empty)                    ; => true
-(cons (make-posn 1 1) sample-cells)  ; 先頭に足した**新しい**リスト
-```
-
-所属判定（ASL の `member?`）:
-
-```racket
-(define (alive? cells cell)
-  (member? cell cells))
-
-(alive? sample-cells (make-posn 4 4))  ; true
-(alive? sample-cells (make-posn 0 0))  ; false
-```
-
-リストの長さ（再帰の予告）:
-
-```racket
+;; リストの長さ: 空なら 0、そうでなければ 1 + 残りの長さ
 (define (my-length xs)
-  (if (empty? xs)
-      0
-      (+ 1 (my-length (rest xs)))))
+  (cond
+    [(empty? xs) 0]
+    [else (+ 1 (my-length (rest xs)))]))
 ```
 
-`map` / `filter` は第2章の主役だが、味見だけ:
+**所属判定**とは、「このセルは、生存リストの中にいるか？」を true/false で答えることです。
+
+**再帰**とは、関数の定義の中で**自分自身を呼び出す**書き方です。リストのように「空」か「先頭+残り」かに分かれるデータでは、残りに対して同じ問題を解けば全体が解けます。
 
 ```racket
-(map posn-x sample-cells)  ; 各セルの x 座標のリスト
-(filter (lambda (c) (= (posn-x c) 4)) sample-cells)
+;; alive?: リスト cells の中に cell があるか
+(define (alive? cells cell)
+  (cond
+    [(empty? cells) false]                      ; もう候補がない → いない
+    [(equal? (first cells) cell) true]          ; 先頭が探しているセル → いる
+    [else (alive? (rest cells) cell)]))         ; ★再帰: 残りだけで同じ判定
 ```
 
-**P1-8** 自分の好きな3セルのリスト `my-cells` を作れ。  
-**P1-9** `alive?` でその1セルが「いる／いない」を確認せよ。  
-**P1-10** `my-length` で要素数を数え、手計算と一致するか見よ。
+`else` 枝の `(alive? (rest cells) cell)` が再帰呼び出しです。リストが1つずつ短くなり、いつか `empty` に至って止まります。
 
-#### 1.6 三角関数 — 計算と「動き」の直感
+#### 1.8 近傍8マス（第4章への橋）
 
-ライフゲーム本体は整数グリッドだが、**アニメ・音楽・振動**の説明や、後の可視化（#30）のために三角関数を置いておく。
+**`map`（高階関数）** は、「リストの各要素に同じ関数をかけて、結果のリストを作る」ための関数です（例: Intermediate 以降でよく使う）。BSL には `map` が無いので、同じことをするときは **8 個をその場で `list` に並べる**か、自分で再帰を書きます。
 
-定義（弧度法）:
-
-- $\sin\theta$, $\cos\theta$ … 単位円上の縦・横
-- 度数 $d$ から弧度: $\theta = d \cdot \pi / 180$
+ここでは8近傍を省略せずに書きます（付属コードと同じ）。
 
 ```racket
-(define (deg->rad deg)
-  (* deg (/ pi 180)))
+;; cell を (dx, dy) だけずらした新しい posn
+(define (shift-cell cell dx dy)
+  (make-posn (+ (posn-x cell) dx)
+             (+ (posn-y cell) dy)))
 
-(define (unit-circle-point deg)
-  (let ([t (deg->rad deg)])
-    (list (cos t) (sin t))))
-
-(unit-circle-point 0)   ; およそ (1 0)
-(unit-circle-point 90)  ; およそ (0 1)
-```
-
-エッセイ的メモ（興味付け）:
-
-- 円運動を真横から見ると、上下の動きは **単振動**（サイン波）に見える
-- 音楽の音色や、画面上のなめらかな往復も同じ道具で書ける
-- ライフゲームの「離散グリッド」と対比すると、連続と離散の両方が見える
-
-詳細な公式表は **付録G**。ここでは「`sin`/`cos` が呼べる」「角度と座標がつながる」まででよい。
-
-**P1-11** `unit-circle-point` で 0° と 180° を試し、x の符号が反転することを見よ。
-
-#### 1.7 ベクトル — 位置とずらし
-
-高校1年レベルの2Dベクトルを、`posn` で表す。
-
-```racket
-(define (v-add a b)
-  (make-posn (+ (posn-x a) (posn-x b))
-             (+ (posn-y a) (posn-y b))))
-
-(define (v-scale k a)
-  (make-posn (* k (posn-x a))
-             (* k (posn-y a))))
-```
-
-セルの近傍8マスは「自分＋デルタ」:
-
-```racket
-(define neighbor-deltas
-  (list (make-posn -1 -1) (make-posn 0 -1) (make-posn 1 -1)
-        (make-posn -1  0)                   (make-posn 1  0)
-        (make-posn -1  1) (make-posn 0  1) (make-posn 1  1)))
-
-(define (shift-cell cell delta)
-  (v-add cell delta))
-
+;; cell の周囲8マス（自分自身は含まない）
 (define (cell-neighbors cell)
-  (map (lambda (d) (shift-cell cell d)) neighbor-deltas))
-
-(cell-neighbors (make-posn 3 2))
-;; => 8 個の posn（自分以外の周囲）
+  (list (shift-cell cell -1 -1)
+        (shift-cell cell  0 -1)
+        (shift-cell cell  1 -1)
+        (shift-cell cell -1  0)
+        (shift-cell cell  1  0)
+        (shift-cell cell -1  1)
+        (shift-cell cell  0  1)
+        (shift-cell cell  1  1)))
 ```
 
-これは後の `count-neighbors` / `next-generation`（第4章）の土台そのもの。
+#### 1.9 付属コードの `check-expect` と実行
 
-**P1-12** `(cell-neighbors '(0 . 0))` の要素数が 8 であることを確認せよ。  
-**P1-13** `v-scale` で `(2 . 3)` を 2 倍し、`(4 . 6)` になることを確認せよ。
-
-#### 1.8 行列 — グリッドの見方
-
-二次元リストを「行のリスト」と見ると、小さな盤面になる。
+テストは **`code/ch01-basics.rkt` の末尾**にまとまっています（本文の断片ではなく、ファイル全体を Run する想定）。  
+ここまでの本文に沿った例だけを挙げます（`average` など本文未出の関数は載せません）。
 
 ```racket
-(define tiny-grid
-  '((0 1 0)
-    (0 0 1)
-    (1 1 1)))
+;; 1.3 定数
+(check-expect BOARD-PIXEL-WIDTH 450)
 
-(define (grid-ref grid r c)
-  (list-ref (list-ref grid r) c))
+;; 1.4 if / ライフ1セル
+(check-expect (survives? 2) true)
+(check-expect (survives? 1) false)
+(check-expect (births? 3) true)
+(check-expect (next-alive? true 2) true)
+(check-expect (next-alive? false 3) true)
+(check-expect (next-alive? true 0) false)
 
-(grid-ref tiny-grid 0 1)  ; => 1
-(grid-ref tiny-grid 2 2)  ; => 1
+;; 1.5 関数
+(check-expect (square-of 8) 64)
+(check-expect (greet "Racket") "Hello, Racket!")
+
+;; 1.6 構造体 cell と posn
+(check-expect (cell-x C1) 3)
+(check-expect (cell-alive? C1) true)
+(check-expect (posn-x SAMPLE-CELL) 3)
+
+;; 1.7 リスト・所属・再帰
+(check-expect (my-length SAMPLE-CELLS) 3)
+(check-expect (alive? SAMPLE-CELLS (make-posn 3 2)) true)
+(check-expect (alive? SAMPLE-CELLS (make-posn 0 0)) false)
+
+;; 1.8 近傍
+(check-expect (my-length (cell-neighbors (make-posn 0 0))) 8)
+
+(test)  ; CLI で結果を表示するための呼び出し
 ```
 
-- 本編の主表現は **疎な生存リスト**（生きている座標だけ）
-- 行列・二次元リストは「密な盤」「画像」「線形変換」の話で再登場（第3章）
-
-**P1-14** `tiny-grid` の中央 `(1,1)` の値を `grid-ref` で読め。
-
-#### 1.9 章末まとめと次章予告
-
-この章で手に入れた部品:
-
-| 部品 | ライフゲームでの意味 |
-|------|----------------------|
-| `define` / 関数 | ルールを名前付きの計算にする |
-| `if` / 真偽 | 生存・誕生の分岐 |
-| リストとペア | 盤面・座標 |
-| `alive?` | そのマスにセルがいるか |
-| `cell-neighbors` | 周囲8マス |
-| ベクトル加減 | ずらし・移動 |
-
-**次章（第2章）** では、再帰・`cond`・`let`・高階関数（`map`/`filter`/`foldl`）を中心に、「リストを舐めて集計する」力を鍛える。第4章の `next-generation` は、その延長線上にある。
-
-**今すぐ試すなら**:
-
-```text
-draft-publish-books-2026/code/ch01-basics.rkt
+```bash
+racket code/ch01-basics.rkt
 ```
 
-を DrRacket で開き Run。`(module+ test)` が通れば、この章の核はクリア。
+DrRacket なら同ファイルを開いて Run。すべて通れば、1.1〜1.8 の核はクリアです。  
+デザインレシピの考え方と、データ種別ごとの型紙は次節でまとめます。
 
----
+#### 1.10 デザインレシピとデータパターン（howtocode 準拠）
 
-## 執筆ログ
+1.5 で触れたデザインレシピを、もう少し丁寧に整理します。  
+内容は [howtocode の htdp_templates](https://howtocode.pages.dev/htdp_templates) に沿った解説です（三角ロジック＝主張・根拠・事実の整理で読みます）。
 
-| 日付 | 内容 |
-|------|------|
-| 2026-06-16 | Issues #8–#12 反映（目次改訂） |
-| 2026-07-11 | 7月優先を確定。成功定義=3章ドラフト。**序章本文** を初稿化。正本は本ファイル。 |
-| 2026-07-11 | **第1章本文** 初稿 + `code/ch01-basics.rkt` |
-| 2026-07-23 | **ASL 化**（`#lang htdp/asl` + `check-expect` / Issue #1） |
+##### 1.10.1 全体の設計思想
 
----
+**事実（何が示されているか）**
 
-*最終更新: 2026-07-11（第1章本文初稿 / Issues #27 #33 連携）*
+プログラムが扱うデータの性質に応じて、次の4パターンについて、データ定義・関数のテンプレート（骨組み）・実装例が用意されています。
+
+1. シンプルな基本データ（Simple Base Data）  
+2. 列挙型（Enum）  
+3. 範囲（Intervals）  
+4. 共用体（Union / 異種データの混在）  
+
+**論拠（なぜ先にデータとテンプレートか）**
+
+- バグの多くは、「入力のすべての可能性を網羅しきれていないこと」や「向かない型への処理」から起きる。  
+- HtDP のデザインレシピは、**データ構造が関数の構造を決める（データ駆動）**という原則に立つ。  
+- 例: データが「信号の3色」なら、関数はだいたい **3枝の `cond`** になる。データが「真偽と数のどちらか」なら、**`boolean?` / `number?` などの型判定による分岐**になる。  
+- データの形が決まれば関数の骨組みも機械的に導けるので、勘だけに頼らず、漏れの少ないプログラムを組み立てやすい。  
+
+**主張（この節の結論）**
+
+扱うデータの構造を正しく定義できれば、それに対応する関数の骨組み（テンプレート）はほぼ決まる。以下のパターンはその型紙である。
+
+##### 1.10.2 パターン別の型紙
+
+**パターン1: シンプルな基本データ**
+
+- **意味**: 分解しない単一の値（数や文字列そのもの）をそのまま処理する。  
+- **テンプレート**: `(define (関数名 引数) (... 引数))`  
+- **例**:
+
+```racket
+; double: (Number -> Number)
+; 与えられた数値を2倍にする
+(check-expect (double 2) 4)
+(define (double n)
+  (* n 2))  ; テンプレートの「...」を具体的な計算に置き換える
+```
+
+本章の `square-of` や `greet` も、このパターンに近いです。
+
+**パターン2: 列挙型（Enum）**
+
+- **意味**: 取りうる値が、有限個の決まった候補だけである場合。  
+- **テンプレート**: 候補の個数と同じ本数の `cond` 枝を用意する。  
+- **例**: 信号 `"red"` / `"green"` / `"yellow"` なら、テンプレートの時点で枝は3本と決まる。
+
+```racket
+(define (traffic-light-next st)
+  (cond
+    [(string=? "red" st) "green"]
+    [(string=? "green" st) "yellow"]
+    [(string=? "yellow" st) "red"]))
+```
+
+本章の `survives?` のように真偽で切る場合も、「場合の数に合わせて枝を用意する」点では同じ考え方です。
+
+**パターン3: 範囲（インターバル / Intervals）**
+
+- **意味**: 情報が、ある範囲の数である場合。数学の区間を条件式で表す。  
+- **判定のルール**:  
+  - 角括弧 `[` `]`（境界を含む）→ 不等号に `=` を付ける（`>=` / `<=`）  
+  - 丸括弧 `(` `)`（境界を含まない）→ `=` を付けない（`>` / `<`）  
+- **例**:  
+  - `[0, 100]`（0以上100以下）→ `(and (>= n 0) (<= n 100))`  
+  - `(80, 100]`（80より大きく100以下）→ `(and (> num 80) (<= num 100))`  
+
+近傍数 0〜8 のような整数も、「範囲や帯」として `cond` に落とす練習が第2章以降で出てきます。
+
+**パターン4: 共用体（Union / 異種データの混在）**
+
+- **意味**: 異なる型（例: Boolean と Number）が混ざりうる場合。  
+- **テンプレート**: 各型の述語（`boolean?` / `number?` など）で `cond` 分岐する。  
+- **例**: 有効な ID は「無しを表す `#false`」か「番号を表す Number」のどちらか。
+
+```racket
+(define (pull-over-id-check? x)
+  (cond
+    [(boolean? x) #false]  ; Boolean（#false）なら無効
+    [(number? x)  #true])) ; Number（ID番号）なら有効
+```
+
+##### 1.10.3 手順の再掲
+
+データの種類によらず、デザインレシピではだいたい次の順で進みます。
+
+1. データ定義  
+2. シグネチャと目的  
+3. テスト（`check-expect`）  
+4. テンプレート作成  
+5. 実装  
+
+1.5 の「例を先に」は、上の 3 を 5 より前にやる、という意味です。第2章ではリストの自己参照とテンプレートを中心に、この手順をさらに練習します。
+
+#### 1.11 参考文献
+
+- [howtocode — Syntax Cheat Sheet](https://howtocode.pages.dev/cheatsheet)  
+- [howtocode — Templates](https://howtocode.pages.dev/htdp_templates)  
+- [BSL ドキュメント](https://docs.racket-lang.org/htdp-langs/beginner.html)  

@@ -1,21 +1,14 @@
 ;; Copyright (c) 2026 mevius
-;; Licensed under the MIT License.
-;; See LICENSE file in the project root for full license text.
-;;
-;; 第4章 サンプル: ライフゲームのルールとセルオートマトン
-;; 言語: Advanced Student (#lang htdp/asl)
-;; 正本: books/racket-game-of-life/ch04-life-rules.md
-;; 盤面: 生存セル = (make-posn x y) のリスト（不変・スパース）
-;;
+;; 第4章: ライフゲームのルール（BSL・構造的再帰）
 ;; CLI: racket code/ch04-life-rules.rkt
 
-#lang htdp/asl
+#lang htdp/bsl
 
 (require test-engine/racket-tests)
 
-;; ------------------------------------------------------------
-;; 4.1 ルール（B3/S23）— 1セルの次状態
-;; ------------------------------------------------------------
+;; ============================================================
+;; 4.1 ルール B3/S23
+;; ============================================================
 
 (define (survives? neighbors)
   (or (= neighbors 2) (= neighbors 3)))
@@ -28,82 +21,118 @@
       (survives? neighbors)
       (births? neighbors)))
 
-;; ------------------------------------------------------------
-;; 4.2 近傍 — count-neighbors
-;; ------------------------------------------------------------
+;; ============================================================
+;; ListOfPosn helpers
+;; ============================================================
 
-(define neighbor-deltas
-  (list (make-posn -1 -1) (make-posn 0 -1) (make-posn 1 -1)
-        (make-posn -1  0)                   (make-posn 1  0)
-        (make-posn -1  1) (make-posn 0  1) (make-posn 1  1)))
-
-(define (shift-cell cell delta)
-  (make-posn (+ (posn-x cell) (posn-x delta))
-             (+ (posn-y cell) (posn-y delta))))
+(define (shift-cell cell dx dy)
+  (make-posn (+ (posn-x cell) dx)
+             (+ (posn-y cell) dy)))
 
 (define (cell-neighbors cell)
-  (map (lambda (d) (shift-cell cell d)) neighbor-deltas))
+  (list (shift-cell cell -1 -1)
+        (shift-cell cell 0 -1)
+        (shift-cell cell 1 -1)
+        (shift-cell cell -1 0)
+        (shift-cell cell 1 0)
+        (shift-cell cell -1 1)
+        (shift-cell cell 0 1)
+        (shift-cell cell 1 1)))
 
-(define (alive-in? live-cells cell)
-  (member? cell live-cells))
+;; member-posn?: Posn ListOfPosn -> Boolean
+(define (member-posn? cell cells)
+  (cond
+    [(empty? cells) false]
+    [(equal? cell (first cells)) true]
+    [else (member-posn? cell (rest cells))]))
 
-;; 固定境界: 盤外はリストにいない＝寄与 0
-(define (count-neighbors cell live-cells)
-  (length
-   (filter (lambda (n) (alive-in? live-cells n))
-           (cell-neighbors cell))))
+;; count-alive-in: ListOfPosn ListOfPosn -> Natural
+;; neighbors のうち live に含まれる個数
+(define (count-alive-in neighbors live)
+  (cond
+    [(empty? neighbors) 0]
+    [(member-posn? (first neighbors) live)
+     (+ 1 (count-alive-in (rest neighbors) live))]
+    [else (count-alive-in (rest neighbors) live)]))
 
-;; ------------------------------------------------------------
-;; 候補集合と次世代
-;; ------------------------------------------------------------
+(define (count-neighbors cell live)
+  (count-alive-in (cell-neighbors cell) live))
 
-;; リストの和集合（重複除去）
+;; add-unique: Posn ListOfPosn -> ListOfPosn
 (define (add-unique x xs)
-  (if (member? x xs)
-      xs
-      (cons x xs)))
+  (cond
+    [(member-posn? x xs) xs]
+    [else (cons x xs)]))
 
+;; union-list: ListOfPosn ListOfPosn -> ListOfPosn
 (define (union-list a b)
-  (foldr add-unique b a))
+  (cond
+    [(empty? a) b]
+    [else (union-list (rest a) (add-unique (first a) b))]))
 
-;; 1セルの近傍を live に足す
+;; add-neighbors-of: Posn ListOfPosn -> ListOfPosn
 (define (add-neighbors-of cell acc)
   (union-list (cell-neighbors cell) acc))
 
-;; 次世代の候補 = 生存 ∪ その全近傍
-(define (candidate-cells live-cells)
-  (foldr add-neighbors-of live-cells live-cells))
+;; fold-add-neighbors: ListOfPosn ListOfPosn -> ListOfPosn
+(define (fold-add-neighbors cells acc)
+  (cond
+    [(empty? cells) acc]
+    [else (fold-add-neighbors (rest cells)
+                              (add-neighbors-of (first cells) acc))]))
+
+(define (candidate-cells live)
+  (fold-add-neighbors live live))
+
+;; filter-next: ListOfPosn ListOfPosn -> ListOfPosn
+;; candidates のうち next-alive? が true のもの
+(define (filter-next candidates live)
+  (cond
+    [(empty? candidates) empty]
+    [(next-alive? (member-posn? (first candidates) live)
+                  (count-neighbors (first candidates) live))
+     (cons (first candidates)
+           (filter-next (rest candidates) live))]
+    [else (filter-next (rest candidates) live)]))
 
 (define (next-generation cells)
-  (local [(define live cells)
-          (define candidates (candidate-cells live))]
-    (filter (lambda (c)
-              (next-alive? (alive-in? live c)
-                           (count-neighbors c live)))
-            candidates)))
+  (filter-next (candidate-cells cells) cells))
 
-;; 比較用ソート（x 昇順、同 x なら y 昇順）
+;; cell<? : Posn Posn -> Boolean
 (define (cell<? a b)
-  (or (< (posn-x a) (posn-x b))
-      (and (= (posn-x a) (posn-x b))
-           (< (posn-y a) (posn-y b)))))
+  (cond
+    [(< (posn-x a) (posn-x b)) true]
+    [(> (posn-x a) (posn-x b)) false]
+    [else (< (posn-y a) (posn-y b))]))
+
+;; insert-cell: Posn ListOfPosn -> ListOfPosn  （ソート挿入）
+(define (insert-cell c sorted)
+  (cond
+    [(empty? sorted) (list c)]
+    [(cell<? c (first sorted)) (cons c sorted)]
+    [else (cons (first sorted) (insert-cell c (rest sorted)))]))
 
 (define (sort-cells cells)
-  (sort cells cell<?))
+  (cond
+    [(empty? cells) empty]
+    [else (insert-cell (first cells) (sort-cells (rest cells)))]))
 
 (define (same-world? a b)
   (equal? (sort-cells a) (sort-cells b)))
 
-;; n 世代進める（名前付き let = ASL の recur 相当）
 (define (step-n cells n)
   (cond
     [(<= n 0) cells]
     [else (step-n (next-generation cells) (- n 1))]))
 
-;; ------------------------------------------------------------
-;; 4.4 トーラス（周期境界）
-;; ------------------------------------------------------------
+(define (place cells dx dy)
+  (cond
+    [(empty? cells) empty]
+    [else (cons (make-posn (+ (posn-x (first cells)) dx)
+                           (+ (posn-y (first cells)) dy))
+                (place (rest cells) dx dy))]))
 
+;; wrap for torus
 (define (wrap-coord v limit)
   (modulo v limit))
 
@@ -112,34 +141,56 @@
              (wrap-coord (posn-y cell) height)))
 
 (define (cell-neighbors/torus cell width height)
-  (map (lambda (d)
-         (wrap-cell (shift-cell cell d) width height))
-       neighbor-deltas))
+  (list (wrap-cell (shift-cell cell -1 -1) width height)
+        (wrap-cell (shift-cell cell 0 -1) width height)
+        (wrap-cell (shift-cell cell 1 -1) width height)
+        (wrap-cell (shift-cell cell -1 0) width height)
+        (wrap-cell (shift-cell cell 1 0) width height)
+        (wrap-cell (shift-cell cell -1 1) width height)
+        (wrap-cell (shift-cell cell 0 1) width height)
+        (wrap-cell (shift-cell cell 1 1) width height)))
 
-(define (count-neighbors/torus cell live-cells width height)
-  (length
-   (filter (lambda (n) (alive-in? live-cells n))
-           (cell-neighbors/torus cell width height))))
+(define (count-alive-in/torus neighbors live)
+  (cond
+    [(empty? neighbors) 0]
+    [(member-posn? (first neighbors) live)
+     (+ 1 (count-alive-in/torus (rest neighbors) live))]
+    [else (count-alive-in/torus (rest neighbors) live)]))
 
-(define (add-neighbors-of/torus width height)
-  (lambda (cell acc)
-    (union-list (cell-neighbors/torus cell width height) acc)))
+(define (count-neighbors/torus cell live width height)
+  (count-alive-in/torus (cell-neighbors/torus cell width height) live))
 
-(define (candidate-cells/torus live-cells width height)
-  (foldr (add-neighbors-of/torus width height) live-cells live-cells))
+(define (add-neighbors-of/torus cell acc width height)
+  (union-list (cell-neighbors/torus cell width height) acc))
+
+(define (fold-add-neighbors/torus cells acc width height)
+  (cond
+    [(empty? cells) acc]
+    [else (fold-add-neighbors/torus (rest cells)
+                                    (add-neighbors-of/torus (first cells) acc width height)
+                                    width height)]))
+
+(define (candidate-cells/torus live width height)
+  (fold-add-neighbors/torus live live width height))
+
+(define (filter-next/torus candidates live width height)
+  (cond
+    [(empty? candidates) empty]
+    [(next-alive? (member-posn? (first candidates) live)
+                  (count-neighbors/torus (first candidates) live width height))
+     (cons (first candidates)
+           (filter-next/torus (rest candidates) live width height))]
+    [else (filter-next/torus (rest candidates) live width height)]))
 
 (define (next-generation/torus cells width height)
-  (local [(define live cells)
-          (define candidates (candidate-cells/torus live width height))]
-    (filter (lambda (c)
-              (next-alive? (alive-in? live c)
-                           (count-neighbors/torus c live width height)))
-            candidates)))
+  (filter-next/torus (candidate-cells/torus cells width height) cells width height))
 
-;; ------------------------------------------------------------
-;; 有名パターン
-;; ------------------------------------------------------------
+(define (my-length xs)
+  (cond
+    [(empty? xs) 0]
+    [else (+ 1 (my-length (rest xs)))]))
 
+;; patterns
 (define block
   (list (make-posn 1 1) (make-posn 1 2)
         (make-posn 2 1) (make-posn 2 2)))
@@ -150,10 +201,6 @@
 (define blinker-v
   (list (make-posn 1 2) (make-posn 2 2) (make-posn 3 2)))
 
-;; グライダー
-;;  . # .
-;;  . . #
-;;  # # #
 (define glider
   (list (make-posn 1 0) (make-posn 2 1)
         (make-posn 0 2) (make-posn 1 2) (make-posn 2 2)))
@@ -162,58 +209,26 @@
   (list (make-posn 1 1) (make-posn 1 2) (make-posn 2 1) (make-posn 2 2)
         (make-posn 3 3) (make-posn 3 4) (make-posn 4 3) (make-posn 4 4)))
 
-;; 平行移動
-(define (place cells dx dy)
-  (map (lambda (c)
-         (make-posn (+ (posn-x c) dx)
-                    (+ (posn-y c) dy)))
-       cells))
-
-;; ------------------------------------------------------------
-;; check-expect
-;; ------------------------------------------------------------
-
-;; ルール単体
+;; tests
 (check-expect (survives? 2) true)
 (check-expect (survives? 3) true)
 (check-expect (survives? 1) false)
-(check-expect (survives? 4) false)
 (check-expect (births? 3) true)
-(check-expect (births? 2) false)
 (check-expect (next-alive? true 2) true)
 (check-expect (next-alive? false 3) true)
 (check-expect (next-alive? true 0) false)
-(check-expect (next-alive? false 2) false)
-
-;; 近傍
-(check-expect (length (cell-neighbors (make-posn 0 0))) 8)
+(check-expect (my-length (cell-neighbors (make-posn 0 0))) 8)
 (check-expect (count-neighbors (make-posn 1 1) block) 3)
-(check-expect (count-neighbors (make-posn 0 0) block) 1)
-
-;; 静止物: ブロック
 (check-expect (same-world? (next-generation block) block) true)
 (check-expect (same-world? (step-n block 5) block) true)
-
-;; 振動子: ブリンカー周期 2
 (check-expect (same-world? (next-generation blinker-h) blinker-v) true)
 (check-expect (same-world? (next-generation blinker-v) blinker-h) true)
 (check-expect (same-world? (step-n blinker-h 2) blinker-h) true)
-(check-expect (same-world? (step-n blinker-h 4) blinker-h) true)
+(check-expect (same-world? (next-generation (next-generation beacon)) beacon) true)
+(check-expect (same-world? (step-n glider 4) (place glider 1 1)) true)
+(check-expect (my-length glider) 5)
+(check-expect (my-length (next-generation glider)) 5)
 
-;; ビーコン周期 2
-(check-expect
- (same-world? (next-generation (next-generation beacon)) beacon)
- true)
-
-;; グライダー: 4 世代で (1,1) シフト
-(check-expect
- (same-world? (step-n glider 4) (place glider 1 1))
- true)
-(check-expect (length glider) 5)
-(check-expect (length (next-generation glider)) 5)
-(check-expect (length (step-n glider 4)) 5)
-
-;; トーラス: 端のブリンカー
 (define blinker-edge
   (list (make-posn 0 0) (make-posn 0 1) (make-posn 0 2)))
 

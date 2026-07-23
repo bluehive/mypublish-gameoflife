@@ -5,8 +5,8 @@ title: "第4章　ライフゲームのルールとセルオートマトン"
 > **この章のゴール**  
 > コンウェイのルール（B3/S23）を関数に落とし、`count-neighbors` と `next-generation` で盤面を進める。  
 > 静止物・振動子・グライダーを `check-expect` で回帰できるようにする。  
-> **付属コード**: `code/ch04-life-rules.rkt`（`#lang htdp/asl` — `racket code/ch04-life-rules.rkt`）  
-> **状態**: 実験 worktree ドラフト（Issue #1 ASL / #27 / #29 — 7月成功定義）
+> **付属コード**: `code/ch04-life-rules.rkt`（`#lang htdp/bsl` — 構造的再帰。`map`/`filter`/`lambda` 不使用）  
+> **状態**: BSL 書き直し（ユーザー方針 2026-07-23 / howtocode テンプレート）
 
 #### 4.1 コンウェイのルール（B3/S23）
 
@@ -61,7 +61,7 @@ title: "第4章　ライフゲームのルールとセルオートマトン"
 
 - 空の大海原を 0 で埋めなくてよい（大規模・疎な配置向き）
 - 次世代は「新しいリストを返す」だけで、破壊的更新が不要（関数型）
-- ASL の `member?` / `filter` / `map` と相性がよい
+- BSL では `member-posn?` / 再帰による `filter-next` で同等を実現する
 
 トレードオフ:
 
@@ -252,7 +252,8 @@ racket code/ch04-life-rules.rkt
 1. **初期配置**をリストで置く（パターン関数でも、手書きでも）  
 2. **世代ループ**: `(step-n world n)` または REPL で `(define w2 (next-generation w1))`  
 3. **観察**: 第5章の ASCII / 画像で見る  
-4. **テスト**: パターンの不変条件を `rackunit` に残す  
+4. **テスト**: パターンの不変条件を `check-expect` に残す  
+
 
 二次元リスト（密行列）版は `my-racket/lifeofgame.rkt` にもある。教育用には:
 

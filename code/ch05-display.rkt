@@ -1,21 +1,12 @@
 ;; Copyright (c) 2026 mevius
-;; Licensed under the MIT License.
-;; See LICENSE file in the project root for full license text.
-;;
-;; 第5章 骨格: 描画と対話——盤面を見る
-;; 言語: Advanced Student (#lang htdp/asl)
-;; 正本: books/racket-game-of-life/ch05-display.md
-;; 第4章と同型のルールを自己完結で再掲（ASL は章ファイル単体で読める方針）
-;;
+;; 第5章: 描画とパターン（BSL）
 ;; CLI: racket code/ch05-display.rkt
 
-#lang htdp/asl
+#lang htdp/bsl
 
 (require test-engine/racket-tests)
 
-;; ------------------------------------------------------------
-;; ルールエンジン（第4章の要約・自己完結）
-;; ------------------------------------------------------------
+;; ---- engine (ch04 と同型・BSL) ----
 
 (define (survives? neighbors)
   (or (= neighbors 2) (= neighbors 3)))
@@ -28,53 +19,86 @@
       (survives? neighbors)
       (births? neighbors)))
 
-(define neighbor-deltas
-  (list (make-posn -1 -1) (make-posn 0 -1) (make-posn 1 -1)
-        (make-posn -1  0)                   (make-posn 1  0)
-        (make-posn -1  1) (make-posn 0  1) (make-posn 1  1)))
-
-(define (shift-cell cell delta)
-  (make-posn (+ (posn-x cell) (posn-x delta))
-             (+ (posn-y cell) (posn-y delta))))
+(define (shift-cell cell dx dy)
+  (make-posn (+ (posn-x cell) dx)
+             (+ (posn-y cell) dy)))
 
 (define (cell-neighbors cell)
-  (map (lambda (d) (shift-cell cell d)) neighbor-deltas))
+  (list (shift-cell cell -1 -1)
+        (shift-cell cell 0 -1)
+        (shift-cell cell 1 -1)
+        (shift-cell cell -1 0)
+        (shift-cell cell 1 0)
+        (shift-cell cell -1 1)
+        (shift-cell cell 0 1)
+        (shift-cell cell 1 1)))
 
-(define (alive-in? live-cells cell)
-  (member? cell live-cells))
+(define (member-posn? cell cells)
+  (cond
+    [(empty? cells) false]
+    [(equal? cell (first cells)) true]
+    [else (member-posn? cell (rest cells))]))
 
-(define (count-neighbors cell live-cells)
-  (length
-   (filter (lambda (n) (alive-in? live-cells n))
-           (cell-neighbors cell))))
+(define (count-alive-in neighbors live)
+  (cond
+    [(empty? neighbors) 0]
+    [(member-posn? (first neighbors) live)
+     (+ 1 (count-alive-in (rest neighbors) live))]
+    [else (count-alive-in (rest neighbors) live)]))
+
+(define (count-neighbors cell live)
+  (count-alive-in (cell-neighbors cell) live))
 
 (define (add-unique x xs)
-  (if (member? x xs) xs (cons x xs)))
+  (cond
+    [(member-posn? x xs) xs]
+    [else (cons x xs)]))
 
 (define (union-list a b)
-  (foldr add-unique b a))
+  (cond
+    [(empty? a) b]
+    [else (union-list (rest a) (add-unique (first a) b))]))
 
 (define (add-neighbors-of cell acc)
   (union-list (cell-neighbors cell) acc))
 
-(define (candidate-cells live-cells)
-  (foldr add-neighbors-of live-cells live-cells))
+(define (fold-add-neighbors cells acc)
+  (cond
+    [(empty? cells) acc]
+    [else (fold-add-neighbors (rest cells)
+                              (add-neighbors-of (first cells) acc))]))
+
+(define (candidate-cells live)
+  (fold-add-neighbors live live))
+
+(define (filter-next candidates live)
+  (cond
+    [(empty? candidates) empty]
+    [(next-alive? (member-posn? (first candidates) live)
+                  (count-neighbors (first candidates) live))
+     (cons (first candidates)
+           (filter-next (rest candidates) live))]
+    [else (filter-next (rest candidates) live)]))
 
 (define (next-generation cells)
-  (local [(define live cells)
-          (define candidates (candidate-cells live))]
-    (filter (lambda (c)
-              (next-alive? (alive-in? live c)
-                           (count-neighbors c live)))
-            candidates)))
+  (filter-next (candidate-cells cells) cells))
 
 (define (cell<? a b)
-  (or (< (posn-x a) (posn-x b))
-      (and (= (posn-x a) (posn-x b))
-           (< (posn-y a) (posn-y b)))))
+  (cond
+    [(< (posn-x a) (posn-x b)) true]
+    [(> (posn-x a) (posn-x b)) false]
+    [else (< (posn-y a) (posn-y b))]))
+
+(define (insert-cell c sorted)
+  (cond
+    [(empty? sorted) (list c)]
+    [(cell<? c (first sorted)) (cons c sorted)]
+    [else (cons (first sorted) (insert-cell c (rest sorted)))]))
 
 (define (sort-cells cells)
-  (sort cells cell<?))
+  (cond
+    [(empty? cells) empty]
+    [else (insert-cell (first cells) (sort-cells (rest cells)))]))
 
 (define (same-world? a b)
   (equal? (sort-cells a) (sort-cells b)))
@@ -85,61 +109,43 @@
     [else (step-n (next-generation cells) (- n 1))]))
 
 (define (place cells dx dy)
-  (map (lambda (c)
-         (make-posn (+ (posn-x c) dx)
-                    (+ (posn-y c) dy)))
-       cells))
+  (cond
+    [(empty? cells) empty]
+    [else (cons (make-posn (+ (posn-x (first cells)) dx)
+                           (+ (posn-y (first cells)) dy))
+                (place (rest cells) dx dy))]))
 
-;; ------------------------------------------------------------
-;; 5.1 ASCII 表示
-;; ------------------------------------------------------------
+(define (my-length xs)
+  (cond
+    [(empty? xs) 0]
+    [else (+ 1 (my-length (rest xs)))]))
 
-;; ASL に displayln が無いので display + newline
-(define (display-line s)
-  (begin
-    (display s)
-    (newline)))
+;; ---- ASCII ----
 
-;; 1 行分の文字列を組み立てる
-(define (row->string live-cells ox y width)
-  (implode
-   (map (lambda (i)
-          (if (alive-in? live-cells (make-posn (+ ox i) y))
-              "#"
-              "."))
-        (range 0 width 1))))
+;; char-at: ListOfPosn Number Number -> String  ("#" or ".")
+(define (char-at live x y)
+  (if (member-posn? (make-posn x y) live) "#" "."))
+
+;; row-from: ... build string for one row starting at ox, length width
+(define (row-from live ox y i width)
+  (cond
+    [(>= i width) ""]
+    [else (string-append (char-at live (+ ox i) y)
+                         (row-from live ox y (add1 i) width))]))
+
+(define (rows-from live ox oy j height width)
+  (cond
+    [(>= j height) empty]
+    [else (cons (row-from live ox (+ oy j) 0 width)
+                (rows-from live ox oy (add1 j) height width))]))
 
 (define (world->rows cells origin-x origin-y width height)
-  (map (lambda (j)
-         (row->string cells origin-x (+ origin-y j) width))
-       (range 0 height 1)))
+  (rows-from cells origin-x origin-y 0 height width))
 
-(define (display-world cells origin-x origin-y width height gen)
-  (begin
-    (when (number? gen)
-      (begin
-        (display "Generation ")
-        (display gen)
-        (newline)))
-    (for-each display-line
-              (world->rows cells origin-x origin-y width height))))
+;; 表示は副作用。BSL に begin が無いため、テスト対象は純粋な world->rows のみ。
+;; DrRacket 相互作用では (world->rows ...) の結果リストを目視する。
 
-;; ------------------------------------------------------------
-;; 5.2 世代送り（簡易）
-;; ------------------------------------------------------------
-
-(define (evolve-ascii cells n origin-x origin-y width height)
-  (local [(define (loop world gen)
-            (begin
-              (display-world world origin-x origin-y width height gen)
-              (display-line "---")
-              (cond
-                [(>= gen n) world]
-                [else (loop (next-generation world) (add1 gen))])))]
-    (loop cells 0)))
-;; ------------------------------------------------------------
-;; 5.3 有名パターン
-;; ------------------------------------------------------------
+;; ---- patterns ----
 
 (define pattern-block
   (list (make-posn 0 0) (make-posn 0 1)
@@ -160,49 +166,52 @@
   (list (make-posn 1 0) (make-posn 2 0) (make-posn 3 0)
         (make-posn 0 1) (make-posn 1 1) (make-posn 2 1)))
 
-;; パルサーは座標が大きく、骨格では空リスト（プレースホルダ）
-(define pattern-pulsar empty)
+(define pattern-pulsar
+  (list
+   (make-posn 2 0) (make-posn 3 0) (make-posn 4 0)
+   (make-posn 8 0) (make-posn 9 0) (make-posn 10 0)
+   (make-posn 0 2) (make-posn 5 2) (make-posn 7 2) (make-posn 12 2)
+   (make-posn 0 3) (make-posn 5 3) (make-posn 7 3) (make-posn 12 3)
+   (make-posn 0 4) (make-posn 5 4) (make-posn 7 4) (make-posn 12 4)
+   (make-posn 2 5) (make-posn 3 5) (make-posn 4 5)
+   (make-posn 8 5) (make-posn 9 5) (make-posn 10 5)
+   (make-posn 2 7) (make-posn 3 7) (make-posn 4 7)
+   (make-posn 8 7) (make-posn 9 7) (make-posn 10 7)
+   (make-posn 0 8) (make-posn 5 8) (make-posn 7 8) (make-posn 12 8)
+   (make-posn 0 9) (make-posn 5 9) (make-posn 7 9) (make-posn 12 9)
+   (make-posn 0 10) (make-posn 5 10) (make-posn 7 10) (make-posn 12 10)
+   (make-posn 2 12) (make-posn 3 12) (make-posn 4 12)
+   (make-posn 8 12) (make-posn 9 12) (make-posn 10 12)))
 
 (define (union-cells a b)
   (sort-cells (union-list a b)))
 
-;; ------------------------------------------------------------
-;; 5.4 Life 1.06 風パーサ（行単位）
-;; ASL に string-split / string-trim が無いので最小実装
-;; ------------------------------------------------------------
-
-;; 先頭の空白位置（無ければ false）
+;; Life 1.06 line parser
 (define (first-space-index s i)
   (cond
     [(>= i (string-length s)) false]
-    [(string=? (string-ith s i) " ") i]
+    [(string=? (substring s i (add1 i)) " ") i]
     [else (first-space-index s (add1 i))]))
 
-;; 行が "x y" なら posn、コメント/不正なら false
 (define (parse-life106-line line)
   (cond
     [(string=? line "") false]
-    [(string=? (string-ith line 0) "#") false]
+    [(string=? (substring line 0 1) "#") false]
     [else
-     (local [(define sp (first-space-index line 0))]
-       (cond
-         [(false? sp) false]
-         [else
-          (local [(define a (string->number (substring line 0 sp)))
-                  (define b (string->number
-                             (substring line (add1 sp) (string-length line))))]
-            (if (and (number? a) (number? b))
-                (make-posn a b)
-                false))]))]))
-;; ------------------------------------------------------------
-;; check-expect
-;; ------------------------------------------------------------
+     (if (false? (first-space-index line 0))
+         false
+         (make-posn
+          (string->number (substring line 0 (first-space-index line 0)))
+          (string->number (substring line
+                                     (add1 (first-space-index line 0))
+                                     (string-length line)))))]))
 
+;; tests
 (define rows-block (world->rows pattern-block 0 0 4 4))
 
-(check-expect (length rows-block) 4)
-(check-expect (string-ith (first rows-block) 0) "#")
-(check-expect (string-ith (first rows-block) 2) ".")
+(check-expect (my-length rows-block) 4)
+(check-expect (substring (first rows-block) 0 1) "#")
+(check-expect (substring (first rows-block) 2 3) ".")
 
 (check-expect
  (same-world?
@@ -211,7 +220,6 @@
         (make-posn 4 5) (make-posn 4 6)))
  true)
 
-;; ブリンカー横 → 縦
 (check-expect
  (same-world?
   (next-generation pattern-blinker)
@@ -226,7 +234,11 @@
 (check-expect (parse-life106-line "3 4") (make-posn 3 4))
 
 (check-expect
- (length (union-cells pattern-block (place pattern-block 10 0)))
+ (my-length (union-cells pattern-block (place pattern-block 10 0)))
  8)
+
+(check-expect (my-length pattern-pulsar) 48)
+(check-expect (same-world? (step-n pattern-pulsar 3) pattern-pulsar) true)
+(check-expect (same-world? (next-generation pattern-pulsar) pattern-pulsar) false)
 
 (test)
