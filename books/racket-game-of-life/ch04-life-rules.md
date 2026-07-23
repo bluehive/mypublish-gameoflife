@@ -169,11 +169,23 @@ BSL では `filter` / `local` が使えないので、付属コードでは `can
 
 #### 4.6 まとめ
 
+**この章で出てきた主な名前と役割**
+
+- `survives?` / `births?` / `next-alive?` — B3/S23 の1セル判定  
+- `shift-cell` / `cell-neighbors` — 座標をずらす・8近傍のリスト  
+- `member-posn?` — 生存リストにその座標があるか  
+- `count-neighbors` / `count-alive-in` — 近傍の生存数  
+- `candidate-cells` / `filter-next` / `next-generation` — 候補を作り次世代を返す  
+- `same-world?` / `sort-cells` / `step-n` / `place` — 比較・n世代・平行移動（テスト用）  
+- `block` / `blinker-h` / `glider` など — 有名パターンの定数  
+- `next-generation/torus` — 周期境界版  
+
 - ルールは `next-alive?` に閉じ込める  
 - 盤は `ListOfPosn`、近傍は 8 個の `list`、個数はリスト再帰  
 - 次世代は候補を作ってから `next-alive?` で残す  
 - **パターン ＋ `check-expect`** が第4章の仕様書  
 
 ```bash
+# リポジトリ root から
 racket code/ch04-life-rules.rkt
 ```
