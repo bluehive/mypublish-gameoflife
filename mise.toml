@@ -24,7 +24,7 @@ description = "Zenn プレビュー（ポート指定: PORT=3000 mise run zenn:p
 run = "npx zenn preview --port ${PORT:-3000}"
 
 [tasks."test:racket"]
-description = "code/ 配下の ASL (htdp/asl) を racket で実行（check-expect + test）"
+description = "code/ 配下の BSL (htdp/bsl) を racket で実行（check-expect + test）"
 # mise watch test:racket がこの sources を監視する
 sources = ["code/**/*.rkt", "code/*.rkt"]
 outputs = []
@@ -49,7 +49,7 @@ fi
 '''
 
 [tasks."ci:test"]
-description = "ローカル CI ゲート: ASL テスト一発（マージ前・push 前に推奨）"
+description = "ローカル CI ゲート: BSL テスト一発（マージ前・push 前に推奨）"
 depends = ["test:racket"]
 
 [tasks."watch:test"]

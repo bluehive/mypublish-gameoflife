@@ -5,8 +5,8 @@ title: "第5章　描画と対話——盤面を見る"
 > **この章のゴール（7月骨格）**  
 > 第4章の `next-generation` を、目で追える形にする。  
 > ASCII 表示・REPL での世代送り・有名パターンのカタログを最低限そろえる。  
-> **付属コード**: `code/ch05-display.rkt`（`#lang htdp/asl`・章単体で完結）  
-> **状態**: 骨格ドラフト（GUI / GIF は発展枠 / Issue #1）
+> **付属コード**: `code/ch05-display.rkt`（`#lang htdp/bsl`・章単体で完結）  
+> **状態**: 骨格ドラフト（BSL 化済。GUI / GIF は発展）
 
 #### 5.1 ASCII で盤面を見る
 
