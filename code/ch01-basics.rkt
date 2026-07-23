@@ -26,9 +26,6 @@
 (define (square-of x)
   (* x x))
 
-(define (average a b)
-  (/ (+ a b) 2))
-
 (define (greet name)
   (string-append "Hello, " name "!"))
 
@@ -36,7 +33,6 @@
 ;; 1.4 if / cond — ライフ規則の1セル分（応用）
 ;; ------------------------------------------------------------
 
-;; neighbors: 周囲の生存数 0〜8
 (define (survives? neighbors)
   (or (= neighbors 2) (= neighbors 3)))
 
@@ -54,28 +50,26 @@
     [else (= neighbors 3)]))
 
 ;; ------------------------------------------------------------
-;; 1.6 struct — posn（BSL 組み込み）と自前 struct
+;; 1.6 struct — Cell（ライフ向け）と posn
 ;; ------------------------------------------------------------
 
-(define-struct dog (name age))
-;; Dog is (make-dog String Number)
-;; interp. 名前と年齢
+(define-struct cell (x y alive?))
+;; Cell is (make-cell Integer Integer Boolean)
+;; interp. 盤上の1マス。alive? が true なら生きている
 
-(define D1 (make-dog "flipper" 5))
+(define C1 (make-cell 3 2 true))
+(define C2 (make-cell 0 0 false))
 
-;; セル座標は make-posn
 (define SAMPLE-CELL (make-posn 3 2))
 
 ;; ------------------------------------------------------------
-;; 1.5 リスト（BSL: cons / first / rest / empty）
+;; 1.7 リスト（BSL: cons / first / rest / empty）
 ;; ------------------------------------------------------------
 
 (define SAMPLE-CELLS
   (list (make-posn 3 2)
         (make-posn 4 3)
-        (make-posn 2 4)
-        (make-posn 3 4)
-        (make-posn 4 4)))
+        (make-posn 2 4)))
 
 (define (my-length xs)
   (cond
@@ -89,14 +83,13 @@
     [else (alive? (rest cells) cell)]))
 
 ;; ------------------------------------------------------------
-;; 近傍デルタ（第4章への橋・構造的に map 相当を手で）
+;; 1.8 近傍8マス
 ;; ------------------------------------------------------------
 
 (define (shift-cell cell dx dy)
   (make-posn (+ (posn-x cell) dx)
              (+ (posn-y cell) dy)))
 
-;; 8 近傍をリストで返す（BSL: 名前付き補助なしで直接 list）
 (define (cell-neighbors cell)
   (list (shift-cell cell -1 -1)
         (shift-cell cell 0 -1)
@@ -108,24 +101,29 @@
         (shift-cell cell 1 1)))
 
 ;; ------------------------------------------------------------
-;; check-expect
+;; check-expect（本文 1.9 と同じ系統）
 ;; ------------------------------------------------------------
 
-(check-expect (square-of 8) 64)
-(check-expect (average 2 8) 5)
-(check-expect (greet "Racket") "Hello, Racket!")
 (check-expect BOARD-PIXEL-WIDTH 450)
+
 (check-expect (survives? 2) true)
 (check-expect (survives? 1) false)
 (check-expect (births? 3) true)
 (check-expect (next-alive? true 2) true)
 (check-expect (next-alive? false 3) true)
 (check-expect (next-alive? true 0) false)
-(check-expect (dog-name D1) "flipper")
+
+(check-expect (square-of 8) 64)
+(check-expect (greet "Racket") "Hello, Racket!")
+
+(check-expect (cell-x C1) 3)
+(check-expect (cell-alive? C1) true)
 (check-expect (posn-x SAMPLE-CELL) 3)
-(check-expect (my-length SAMPLE-CELLS) 5)
-(check-expect (alive? SAMPLE-CELLS (make-posn 4 4)) true)
+
+(check-expect (my-length SAMPLE-CELLS) 3)
+(check-expect (alive? SAMPLE-CELLS (make-posn 3 2)) true)
 (check-expect (alive? SAMPLE-CELLS (make-posn 0 0)) false)
+
 (check-expect (my-length (cell-neighbors (make-posn 0 0))) 8)
 
 (test)
