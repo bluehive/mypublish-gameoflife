@@ -6,6 +6,7 @@
 - **公開**: [Zenn](https://zenn.dev) 本 → 最終確認後に EPUB / Kindle
 - **マスター Issue**: [my-grok-task-2026#27](https://github.com/bluehive/my-grok-task-2026/issues/27)
 - **本リポジトリ Issue**: [#1 Advanced Student (htdp/asl)](https://github.com/bluehive/mypublish-gameoflife/issues/1)（p0）
+- **作業計画・進捗（エージェント参照）**: [plan.md](./plan.md)
 - **ライセンス**: [MIT](./LICENSE)
 
 ## この README の目次
