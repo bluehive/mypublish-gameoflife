@@ -10,12 +10,15 @@
 ;; 4.1 ルール B3/S23
 ;; ============================================================
 
+(: survives? (Number -> Boolean))
 (define (survives? neighbors)
   (or (= neighbors 2) (= neighbors 3)))
 
+(: births? (Number -> Boolean))
 (define (births? neighbors)
   (= neighbors 3))
 
+(: next-alive? (Boolean Number -> Boolean))
 (define (next-alive? currently-alive? neighbors)
   (if currently-alive?
       (survives? neighbors)

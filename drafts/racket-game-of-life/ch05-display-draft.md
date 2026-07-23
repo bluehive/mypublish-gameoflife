@@ -2,129 +2,157 @@
 title: "第5章　描画と対話——盤面を見る"
 ---
 
-> **この章のゴール（7月骨格）**  
-> 第4章の `next-generation` を、目で追える形にする。  
-> ASCII 表示・REPL での世代送り・有名パターンのカタログを最低限そろえる。  
-> **付属コード**: `code/ch05-display.rkt`（`#lang htdp/bsl`・章単体で完結）  
-> **状態**: 骨格ドラフト（BSL 化済。GUI / GIF は発展）
+> **この章のゴール**  
+> 第4章の盤を、目で見て分かる形にする。ASCII とパターンカタログを揃え、発展として **big-bang** に繋ぐ。  
+> **付属コード**: `code/ch05-display.rkt`（`#lang htdp/bsl`）  
+> **Issue**: [#3](https://github.com/bluehive/mypublish-gameoflife/issues/3)
 
-#### 5.1 ASCII で盤面を見る
+#### 5.1 なぜ「表示」が必要か
 
-スパースな生存リストはそのままでは形が見えない。ビューポート（原点・幅・高さ）を決めて、文字のグリッドに写す。
+`ListOfPosn` のままでは形が見えません。表示は次の役割を持ちます。
+
+- ルール実装が合っているかの**目視チェック**（テストと併用）  
+- ブリンカーやグライダーの動きを体感する  
+
+本線の骨格は **ASCII（文字の升目）** です。画像やアニメは後半の発展です。
+
+#### 5.2 ビューポートと行リスト
+
+表示したい範囲を決めます。
+
+- 原点 `(origin-x, origin-y)` … 画面左上に対応する座標  
+- 幅・高さ … 文字数（マス数）  
+
+生存していれば `"#"`、いなければ `"."` です。
 
 ```racket
-(define (world->rows cells origin-x origin-y width height)
-  …) ; 生存を "#"、それ以外を "."
-
-;; ASL にはキーワード引数が無いので位置引数
-(display-world glider-cells 0 0 12 8 0)
+;; 完成形は code/ch05-display.rkt の world->rows
+;; world->rows: ListOfPosn Number Number Number Number -> ListOfString
+;; スタブ: (define (world->rows cells ox oy w h) empty)
 ```
 
-例（グライダー）:
+例（グライダーを左上付近に置いたイメージ）:
 
-```
+```text
 .#..........
 ..#.........
 ###.........
 ............
 ```
 
-- `#` / `.` は慣習。好みで `■` `・` でもよいが、等幅フォント前提
-- **ロジック座標**と**表示原点**を分ける（グライダーが画面外に出たら origin をずらす）
+BSL には `begin` が無いので、付属コードの自動テストは **純粋な `world->rows`** を中心にします。相互作用ウィンドウでは、返ってきた文字列のリストを目で確認してください。
 
-`2htdp/image` や `racket/gui` は後続で。骨格段階では ASCII がフィードバック最速。
+**P5-1** `pattern-block` について `world->rows` を呼び、2×2 の `#` があることを確認せよ。
 
-**P5-1** `pattern-block` を 6×4 のビューで `display-world` し、2×2 の `#` を確認せよ。
+#### 5.3 世代を進めて見る
 
-#### 5.2 世代を進める REPL コマンド
+第4章の `next-generation` / `step-n` と組み合わせます。
 
 ```racket
-;; DrRacket で code/ch05-display.rkt を Run したあと、相互作用で:
-
 (define w0 pattern-glider)
 (define w1 (next-generation w0))
-(display-world w1 0 0 16 10 1)
+(world->rows w1 0 0 16 10)
 
-;; まとめて見る
-(evolve-ascii pattern-blinker 4 0 0 8 5)
+(define w4 (step-n pattern-glider 4))
+(check-expect (same-world? w4 (place pattern-glider 1 1)) true)
 ```
 
-- `step-n`（第4章）で n 世代先のスナップショットだけ取る  
-- `evolve-ascii` で途中経過を流す（`#:delay` でアニメ風）
+- 1 世代ずつ: `next-generation`  
+- n 世代まとめて: `step-n`  
+- 連続表示のアニメは、発展の big-bang（5.6）向き  
 
-DrRacket の相互作用ウィンドウでも、ターミナルの `racket` でも可。
+**P5-2** ブリンカーを 2 世代進めると元の形に戻ることを `same-world?` で確認せよ。
 
-**P5-2** ブリンカーを 6 世代 `evolve-ascii` し、偶数世代で同じ形に戻ることを目視せよ。
+#### 5.4 有名パターン（カタログ）
 
-#### 5.3 有名パターン
+第4章のパターンテストと**同じ識別子**を使います。カタログは「見た目の名前」と「コードの定数」を対応させる辞書です。
 
-| 名前 | 種別 | コード上の識別子 | 覚え方 |
-|------|------|------------------|--------|
-| ブロック | 静止物 | `pattern-block` | 2×2 が永遠 |
-| ブリンカー | 振動子 p2 | `pattern-blinker` | 横↔縦 |
-| ビーコン | 振動子 p2 | `pattern-beacon` | 角が点滅 |
-| トード | 振動子 p2 | `pattern-toad` | 6 セル |
-| グライダー | 宇宙船 | `pattern-glider` | 4 世代で斜め 1 |
-| パルサー | 振動子 p3 | `pattern-pulsar` | 48 セル・3 世代で戻る |
+- **ブロック** `pattern-block` — 静止物。何世代でも同じ  
+- **ブリンカー** `pattern-blinker` — 振動子。周期 2  
+- **ビーコン** `pattern-beacon` — 振動子。周期 2  
+- **トード** `pattern-toad` — 振動子。周期 2  
+- **グライダー** `pattern-glider` — 宇宙船。4 世代で斜めに 1 マス  
+- **パルサー** `pattern-pulsar` — 振動子。周期 3（48 セルの位相）  
 
 平行移動:
 
 ```racket
-(place pattern-glider 5 3)  ; (+5, +3)
+;; place: ListOfPosn Number Number -> ListOfPosn
+;; スタブ: (define (place cells dx dy) (...))
+;; 完成形は付属コード。各 posn に dx, dy を足す
 ```
-
-合成:
 
 ```racket
-(union-cells pattern-block (place pattern-glider 8 0))
+(place pattern-glider 5 3)
 ```
 
-第4章の `check-expect` と組み合わせると、「カタログの形がエンジンと一致している」ことを機械的に保証できる。
+**P5-3** グライダーを `(place … 2 2)` してから 4 世代進め、さらに (1,1) ずれていることを `check-expect` せよ。  
+**P5-4** `(step-n pattern-pulsar 3)` が元と同じになることを確認せよ。
 
-**P5-3** グライダーを `(place … 2 2)` してから 4 世代進め、さらに (1,1) シフトしていることを `same-world?` で確認せよ。  
-**P5-4** `pattern-pulsar` について `(step-n pattern-pulsar 3)` が元と同じになることを `check-expect`（または REPL）で確認せよ。中間世代のセル数は 48 と限らない。
+#### 5.5 ファイルから読む（骨格）
 
-#### 5.4 ファイルから初期配置を読む（骨格）
+簡易形式: 1 行に `x y`。`#` で始まる行はコメント。
 
-簡易 **Life 1.06 風**: 1 行に `x y`。`#` 始まりはコメント。
-
-```
-# my pattern
+```text
+# my block
 0 0
 0 1
 1 0
 1 1
 ```
 
+付属コードの `parse-life106-line` が1行分のパーサです。ファイル全体の読み込みは、環境によって `file->lines` などが必要になるため、発展課題でも構いません。
+
+#### 5.6 発展: big-bang で自動再生・描画
+
+howtocode の **HTDW（How to Design Worlds）** / `big-bang` は、「時間が進む」「画面に描く」「キーで操作する」アプリの定型です。
+
+ライフへの対応イメージ:
+
+- **WorldState** … 今の `ListOfPosn`（または世代番号も持つ構造体）  
+- **on-tick** … `(next-generation world)` で自動的に世代を進める  
+- **to-draw** … `world->rows` の結果を画像に載せる、または `2htdp/image` で升目を描く  
+- **on-key** … スペースで一時停止、`n` で1世代、など  
+
+ドメイン分析（紙に書く）:
+
+1. 何が一定か（セルサイズ、画面幅）  
+2. 何が変わるか（生存リスト、世代番号）  
+3. どの big-bang 句が要るか（tick / draw / key）  
+
+main の骨（イメージ。画像を使う場合は Intermediate や teachpack の準備が必要なことがある）:
+
 ```racket
-(define cells (load-cells "path/to/pattern.txt"))
-(display-world cells)
+;; 発展用のスケッチ（本章の必須コードではない）
+;; (require 2htdp/image)
+;; (require 2htdp/universe)
+
+;; main: ListOfPosn -> ListOfPosn
+(define (main w0)
+  (big-bang w0
+    [on-tick next-generation]
+    [to-draw render-world]))
+
+;; render-world: ListOfPosn -> Image
+(define (render-world w)
+  (... w))  ; world->rows や place-image で描画
 ```
 
-RLE 形式や `.cells`（Golly）は発展課題。まずは手で書ける行形式から。
+骨格段階の必須到達点は次です。
 
-#### 5.5 GIF / 画像列のエクスポート（発展・未実装）
+- `world->rows` とパターンが付属コードで動く  
+- 第4章の `check-expect` が緑  
+- big-bang は「次に足す部品」として位置づけを理解する  
 
-方針メモのみ（7月骨格の範囲外）:
+GIF 化は、各世代の画像を連番で出し、外部ツールでつなぐ発展課題です。
 
-1. 各世代を `2htdp/image` の bitmap に描く  
-2. 連番 PNG を書く  
-3. 外部ツール（`ffmpeg` 等）で GIF/APNG 化  
+#### 5.7 まとめ
 
-本リポジトリの EPUB パイプラインとは独立。必要になったら Issue で切り出す。
+- 表示はビューポート ＋ `"#"` / `"."` の行リスト  
+- パターン名は第4章テストと共有する  
+- **Template + check-expect（第4章）** と **目視（本章）** を両方使う  
+- **big-bang** は自動再生・対話の発展（howtocode HTDW）  
 
-#### まとめ（骨格チェックリスト）
-
-| 項目 | 状態 |
-|------|------|
-| ASCII `display-world` | 実装済（実験） |
-| `evolve-ascii` | 実装済（実験） |
-| block / blinker / beacon / toad / glider | 実装済 |
-| pulsar 完全座標 + 周期 3 テスト | 実装済（Issue #2 / P-03） |
-| Life 1.06 風ロード | パーサのみ |
-| 2htdp / GUI / GIF | 未（発展） |
-
-第4章のテストが緑であることと、本章で「形が見える」ことが、7月成功定義の第5章骨格の到達点です。
-
-> **実験メモ（worktree）**  
-> `experimental/20260723-mypublish-gol-feat` 上の骨格。公開 chapters への追加は承認後。
+```bash
+racket code/ch05-display.rkt
+```

@@ -1,7 +1,7 @@
 # plan.md — 作業計画・進捗・開発駆動方針
 
-> **このファイルの役割**  
-> エージェント（Grok 等）が作業するときに**最初に参照する**運用メモ。  
+> **このファイルの役割**
+> エージェント（Grok 等）が作業するときに**最初に参照する**運用メモ。
 > 目次・言語方針の詳細・フォルダ構成・mise タスク一覧は **[README.md](./README.md) を正**とし、ここでは重複しない。
 
 | 項目 | 参照先 |
@@ -33,24 +33,24 @@
 
 ### 1.2 開発の軸（ドメイン駆動・テスト駆動・Issue 駆動）
 
-1. **ドメイン中心**  
+1. **ドメイン中心**
    抽象論より先にライフゲームの語彙（セル・近傍・世代・パターン）で関数を切る。
-2. **言語レベル（更新 2026-07-23）**  
-   **当面の第一言語は BSL**（`#lang htdp/bsl` / Beginning Student）。  
-   途中章から Advanced へ上げる可能性あり（ユーザー判断）。Issue #1 の ASL 第一は**上書き**。  
+2. **言語レベル（更新 2026-07-23）**
+   **当面の第一言語は BSL**（`#lang htdp/bsl` / Beginning Student）。
+   途中章から Advanced へ上げる可能性あり（ユーザー判断）。Issue #1 の ASL 第一は**上書き**。
    テストは引き続き `check-expect`（BSL 標準）。CLI は `test-engine` + `(test)` を維持。
-3. **howtocode スタイル**  
+3. **howtocode スタイル**
    導入・式・インストール・チートシート・**HtDP テンプレート**を [howtocode.pages.dev](https://howtocode.pages.dev/) から取り込む（§7）。
-4. **テストゲート**  
-   コード変更後は `mise run ci:test`（または `test:racket`）を緑にしてから区切る。  
+4. **テストゲート**
+   コード変更後は `mise run ci:test`（または `test:racket`）を緑にしてから区切る。
    常駐なら `mise run watch:test`（README「ローカル CI」）。
-5. **Issue 駆動**  
+5. **Issue 駆動**
    大きな方針変更は GitHub Issue を読み、実装前にユーザー承認を取る（特に公開 chapters・破壊的変更）。
-6. **正本を増やさない**  
+6. **正本を増やさない**
    目次の二重管理をしない（旧 `outline.md` は廃止済み）。進捗は **plan.md**、公開向け説明は **README**。
-7. **worktree 安全**  
+7. **worktree 安全**
    実験は `experimental/*` worktree 可。**main を直接壊さない**。マージ・push は明示指示時。
-8. **小さく積む**  
+8. **小さく積む**
    1 作業単位 = 1 章の一部 or 1 Issue チェック項目。コミットメッセージは「なぜ」を含める。
 
 ### 1.3 エージェント作業プロトコル
@@ -73,6 +73,9 @@
 | ASL での実験・テスト追加 | メイン worktree を無視した main 直破壊 |
 | README へのリンクで足りる説明 | 目次を別ファイルに再分裂 |
 | ユーザー指示での commit/push | 秘密情報の commit |
+
+ よい　　リスト表記
+ いけない　図表　崩れるため　このplan.md も含めて
 
 ---
 
@@ -132,7 +135,7 @@
 
 ## 7. 書き換えプラン（ユーザーコメント 2026-07-23）
 
-> 出典: README 末尾 `## assert : user wirte 0723`  
+> 出典: README 末尾 `## assert : user wirte 0723`
 > **実行はユーザー承認後**。承認後: experimental で実装 → `ci:test` → commit → push → SE チェック。
 
 ### 7.1 ユーザー意図の要約
@@ -239,13 +242,13 @@ Function: Signature/purpose/stub → check-expect → Template → Body → Revi
 
 ### 7.8 承認後の実行順序（エージェント）
 
-1. README 言語方針を BSL に更新  
-2. intro.md → ch01 → code/ch01  
-3. ch02 + code/ch02（テンプレ）  
-4. ch03 骨子 → ch04/ch05 調整 + code  
-5. drafts 同期・ci:test  
-6. commit / push（指示どおり）  
-7. SE チェック表を報告  
+1. README 言語方針を BSL に更新
+2. intro.md → ch01 → code/ch01
+3. ch02 + code/ch02（テンプレ）
+4. ch03 骨子 → ch04/ch05 調整 + code
+5. drafts 同期・ci:test
+6. commit / push（指示どおり）
+7. SE チェック表を報告
 
 ---
 
@@ -257,6 +260,7 @@ Function: Signature/purpose/stub → check-expect → Template → Body → Revi
 
 | 時刻帯 | 内容 | 結果 |
 |--------|------|------|
+| — | **Issue #3**: ch03–05 ドラフト仕上げ・付録D独立md | experimental commit 予定（push なし） |
 | — | **§7 承認後実行**: BSL 転換 + howtocode 準拠で README/books/code 書き直し → commit/push | 完了（本作業） |
 | — | README ユーザーコメント解析。howtocode 参照。**BSL 転換・章書き直しプランを §7 に記載** | プラン作成済 |
 
@@ -269,11 +273,11 @@ Function: Signature/purpose/stub → check-expect → Template → Body → Revi
 
 **現状スナップショット**
 
-- 目次正本: README のみ  
-- コード: ch01–ch05 は **`#lang htdp/bsl`**  
-- 教材スタイル: howtocode（intro/cheatsheet/templates）  
-- Zenn chapters: `intro` のみ  
-- **次**: ユーザーによる本文レビュー、必要なら main マージ  
+- 目次正本: README のみ
+- コード: ch01–ch05 は **`#lang htdp/bsl`**
+- 教材スタイル: howtocode（intro/cheatsheet/templates）
+- Zenn chapters: `intro` のみ
+- **次**: ユーザーによる本文レビュー、必要なら main マージ
 
 ---
 
