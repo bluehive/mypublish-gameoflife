@@ -98,11 +98,22 @@ title: "第3章　データ構造——グリッドを表現する"
 
 行 `r`・列 `c` の値を取る（BSL では `list-ref` が使えます）。
 
+デザインレシピでは、完成形の前に **スタブ**（中身はダミーの仮定義）を置く段階があります。  
+スタブは「テストを先に動かすための実行可能なハリボテ」で、テンプレート変数 `...`（設計図の空欄）とは別物です（第2章・[Template Variables](https://docs.racket-lang.org/htdp-langs/beginner.html#%28part._beginner._.Template._.Variables%29)）。
+
+次のスタブは**写経用の完成コードではありません**。ノートや途中ファイルで一時的に使う例です（`;` でコメントにしてあります）。
+
+```racket
+;; --- スタブ（一時的・完成時は消すか上書きする）---
+;; grid-ref: Grid Number Number -> Number
+;; (define (grid-ref g r c) 0)
+```
+
+完成形（付属コードと同じ。こちらを Run する）:
+
 ```racket
 ;; grid-ref: Grid Number Number -> Number
 ;; (grid-ref g r c) は g の r 行 c 列の 0 または 1
-;; スタブ例: (define (grid-ref g r c) 0)
-
 (: grid-ref (Any Number Number -> Number))
 (define (grid-ref g r c)
   (list-ref (list-ref g r) c))
@@ -111,6 +122,16 @@ title: "第3章　データ構造——グリッドを表現する"
 (check-expect (grid-ref TINY-GRID 2 0) 1)
 (check-expect (grid-ref TINY-GRID 0 0) 0)
 ```
+
+**シグネチャを `Any` のままにする理由（発展の `List` 厳密化は後回し）**
+
+初学者の学習では、本質でない細部の議論が増えると**認知負荷**が上がりやすいです。本章の主目標は、「データの形を決める → テンプレート → テスト → 実装」という**デザインレシピの流れ**を体験することです。
+
+- `grid-ref` の第1引数を `List` と書くかどうか、といった細部に入り込むと、「シグネチャをどう正しく書くか」に意識が向き、データから骨組みを組む大局がぼやけやすい  
+- BSL の簡易なシグネチャ検査では、`List` にしても型安全の恩恵を強く実感しにくく、「厳密に書く手間」だけが増えてレシピが面倒だと誤解されるリスクがある  
+- よって本章では第1引数を緩い **`Any`** のままにし、型表現の厳密さは後の章や発展課題に回す  
+
+（PR レビューで `List` への変更提案があったが、上記の教育判断により**採用しない**。）
 
 #### 3.4 密グリッドと `ListOfPosn` の行き来（考え方）
 
