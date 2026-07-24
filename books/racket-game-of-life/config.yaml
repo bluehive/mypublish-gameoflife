@@ -7,4 +7,11 @@ price: 0
 # 承認後に ch01-basics / ch04-life-rules / ch05-display を順次追加
 chapters:
   - intro
+  - ch01-basics
+  - ch02-recursion.md
+  - ch03-grid.md
+  - ch04-life-rules
+  - ch05-display
+  - appendix-d-environment.md
+
 toc_depth: 2
