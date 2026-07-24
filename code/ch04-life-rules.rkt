@@ -1,30 +1,95 @@
-;; Copyright (c) 2026 mevius
-;; 第4章: ライフゲームのルール（BSL・構造的再帰）
-;; CLI: racket code/ch04-life-rules.rkt
+;; Licensed under the MIT License.
+;; See LICENSE file in the project root for full license text.
+;; 第4章: ライフゲームのルール（BSL・デザインレシピ順）
+;; CLI: racket code/ch04-life-rules.rkt  （リポジトリ root から）
 
 #lang htdp/bsl
 
 (require test-engine/racket-tests)
 
 ;; ============================================================
-;; 4.1 ルール B3/S23
+;; デザインレシピ順: データ定義 → interp. → 例 → テンプレ → スタブ → 本体/テスト
 ;; ============================================================
 
+;; ------------------------------------------------------------
+;; データ: 近傍の生存数（Number 0〜8）
+;; ------------------------------------------------------------
+;; Neighbors is Number
+;; interp. あるセルの周囲8マスのうち、生きている個数（0〜8）
+
+(define N0 0)
+(define N2 2)
+(define N3 3)
+(define N8 8)
+
+;; テンプレート（数の基本データ）
+(define (neighbors-template n)
+  (... n))
+
+;; スタブ例（コメント）
+;; (define (survives? neighbors) false)
+
+(: survives? (Number -> Boolean))
 (define (survives? neighbors)
   (or (= neighbors 2) (= neighbors 3)))
 
+(: births? (Number -> Boolean))
 (define (births? neighbors)
   (= neighbors 3))
 
+(: next-alive? (Boolean Number -> Boolean))
 (define (next-alive? currently-alive? neighbors)
   (if currently-alive?
       (survives? neighbors)
       (births? neighbors)))
 
-;; ============================================================
-;; ListOfPosn helpers
-;; ============================================================
+(check-expect (survives? 2) true)
+(check-expect (survives? 3) true)
+(check-expect (survives? 1) false)
+(check-expect (births? 3) true)
+(check-expect (next-alive? true 2) true)
+(check-expect (next-alive? false 3) true)
+(check-expect (next-alive? true 0) false)
 
+;; ------------------------------------------------------------
+;; データ: ListOfPosn（生存セルの盤）
+;; ------------------------------------------------------------
+;; ListOfPosn is one of:
+;;  - empty
+;;  - (cons Posn ListOfPosn)
+;; interp. 今生きているセルの座標だけ。死はリストに載せない。
+
+(define WORLD0 empty)
+(define block
+  (list (make-posn 1 1) (make-posn 1 2)
+        (make-posn 2 1) (make-posn 2 2)))
+(define blinker-h
+  (list (make-posn 2 1) (make-posn 2 2) (make-posn 2 3)))
+(define blinker-v
+  (list (make-posn 1 2) (make-posn 2 2) (make-posn 3 2)))
+(define glider
+  (list (make-posn 1 0) (make-posn 2 1)
+        (make-posn 0 2) (make-posn 1 2) (make-posn 2 2)))
+(define beacon
+  (list (make-posn 1 1) (make-posn 1 2) (make-posn 2 1) (make-posn 2 2)
+        (make-posn 3 3) (make-posn 3 4) (make-posn 4 3) (make-posn 4 4)))
+(define blinker-edge
+  (list (make-posn 0 0) (make-posn 0 1) (make-posn 0 2)))
+
+;; テンプレート: ListOfPosn
+(define (listof-posn-template cells)
+  (cond
+    [(empty? cells) (...)]
+    [else
+     (... (first cells)
+          (listof-posn-template (rest cells)))]))
+
+;; スタブ例（コメント）
+;; (define (member-posn? cell cells) false)
+;; (define (count-neighbors cell live) 0)
+;; (define (next-generation cells) empty)
+
+;; --- 座標・近傍 ---
 (define (shift-cell cell dx dy)
   (make-posn (+ (posn-x cell) dx)
              (+ (posn-y cell) dy)))
@@ -39,6 +104,11 @@
         (shift-cell cell 0 1)
         (shift-cell cell 1 1)))
 
+(define (my-length xs)
+  (cond
+    [(empty? xs) 0]
+    [else (+ 1 (my-length (rest xs)))]))
+
 ;; member-posn?: Posn ListOfPosn -> Boolean
 (define (member-posn? cell cells)
   (cond
@@ -46,8 +116,7 @@
     [(equal? cell (first cells)) true]
     [else (member-posn? cell (rest cells))]))
 
-;; count-alive-in: ListOfPosn ListOfPosn -> Natural
-;; neighbors のうち live に含まれる個数
+;; count-alive-in: 近傍リストのうち live に含まれる個数
 (define (count-alive-in neighbors live)
   (cond
     [(empty? neighbors) 0]
@@ -58,23 +127,19 @@
 (define (count-neighbors cell live)
   (count-alive-in (cell-neighbors cell) live))
 
-;; add-unique: Posn ListOfPosn -> ListOfPosn
 (define (add-unique x xs)
   (cond
     [(member-posn? x xs) xs]
     [else (cons x xs)]))
 
-;; union-list: ListOfPosn ListOfPosn -> ListOfPosn
 (define (union-list a b)
   (cond
     [(empty? a) b]
     [else (union-list (rest a) (add-unique (first a) b))]))
 
-;; add-neighbors-of: Posn ListOfPosn -> ListOfPosn
 (define (add-neighbors-of cell acc)
   (union-list (cell-neighbors cell) acc))
 
-;; fold-add-neighbors: ListOfPosn ListOfPosn -> ListOfPosn
 (define (fold-add-neighbors cells acc)
   (cond
     [(empty? cells) acc]
@@ -84,8 +149,6 @@
 (define (candidate-cells live)
   (fold-add-neighbors live live))
 
-;; filter-next: ListOfPosn ListOfPosn -> ListOfPosn
-;; candidates のうち next-alive? が true のもの
 (define (filter-next candidates live)
   (cond
     [(empty? candidates) empty]
@@ -98,14 +161,13 @@
 (define (next-generation cells)
   (filter-next (candidate-cells cells) cells))
 
-;; cell<? : Posn Posn -> Boolean
+;; 比較・n 世代・平行移動（テスト用）
 (define (cell<? a b)
   (cond
     [(< (posn-x a) (posn-x b)) true]
     [(> (posn-x a) (posn-x b)) false]
     [else (< (posn-y a) (posn-y b))]))
 
-;; insert-cell: Posn ListOfPosn -> ListOfPosn  （ソート挿入）
 (define (insert-cell c sorted)
   (cond
     [(empty? sorted) (list c)]
@@ -132,7 +194,7 @@
                            (+ (posn-y (first cells)) dy))
                 (place (rest cells) dx dy))]))
 
-;; wrap for torus
+;; トーラス（周期境界）
 (define (wrap-coord v limit)
   (modulo v limit))
 
@@ -185,38 +247,7 @@
 (define (next-generation/torus cells width height)
   (filter-next/torus (candidate-cells/torus cells width height) cells width height))
 
-(define (my-length xs)
-  (cond
-    [(empty? xs) 0]
-    [else (+ 1 (my-length (rest xs)))]))
-
-;; patterns
-(define block
-  (list (make-posn 1 1) (make-posn 1 2)
-        (make-posn 2 1) (make-posn 2 2)))
-
-(define blinker-h
-  (list (make-posn 2 1) (make-posn 2 2) (make-posn 2 3)))
-
-(define blinker-v
-  (list (make-posn 1 2) (make-posn 2 2) (make-posn 3 2)))
-
-(define glider
-  (list (make-posn 1 0) (make-posn 2 1)
-        (make-posn 0 2) (make-posn 1 2) (make-posn 2 2)))
-
-(define beacon
-  (list (make-posn 1 1) (make-posn 1 2) (make-posn 2 1) (make-posn 2 2)
-        (make-posn 3 3) (make-posn 3 4) (make-posn 4 3) (make-posn 4 4)))
-
-;; tests
-(check-expect (survives? 2) true)
-(check-expect (survives? 3) true)
-(check-expect (survives? 1) false)
-(check-expect (births? 3) true)
-(check-expect (next-alive? true 2) true)
-(check-expect (next-alive? false 3) true)
-(check-expect (next-alive? true 0) false)
+;; パターンテスト
 (check-expect (my-length (cell-neighbors (make-posn 0 0))) 8)
 (check-expect (count-neighbors (make-posn 1 1) block) 3)
 (check-expect (same-world? (next-generation block) block) true)
@@ -228,10 +259,6 @@
 (check-expect (same-world? (step-n glider 4) (place glider 1 1)) true)
 (check-expect (my-length glider) 5)
 (check-expect (my-length (next-generation glider)) 5)
-
-(define blinker-edge
-  (list (make-posn 0 0) (make-posn 0 1) (make-posn 0 2)))
-
 (check-expect
  (same-world?
   (next-generation/torus (next-generation/torus blinker-edge 5 5) 5 5)
