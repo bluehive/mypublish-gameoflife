@@ -231,6 +231,27 @@
 (check-expect (my-length rows-block) 4)
 (check-expect (substring (first rows-block) 0 1) "#")
 (check-expect (substring (first rows-block) 2 3) ".")
+;; BSL の印字は cons 連鎖でも、list 表記と同じ値
+(check-expect
+ rows-block
+ (list "##.." "##.." "...." "...."))
+
+;; 9×9 ビューポート中央付近に静止物（ブロック）
+(define block-9 (place pattern-block 3 3))
+(define rows-block-9x9 (world->rows block-9 0 0 9 9))
+
+(check-expect (my-length rows-block-9x9) 9)
+(check-expect
+ rows-block-9x9
+ (list "........."
+       "........."
+       "........."
+       "...##...."
+       "...##...."
+       "........."
+       "........."
+       "........."
+       "........."))
 
 (check-expect
  (same-world?
