@@ -1,19 +1,78 @@
-;; Copyright (c) 2026 mevius
-;; 第5章: 描画とパターン（BSL）
-;; CLI: racket code/ch05-display.rkt
+;; Licensed under the MIT License.
+;; See LICENSE file in the project root for full license text.
+;; 第5章: 描画とパターン（BSL・デザインレシピ順）
+;; CLI: racket code/ch05-display.rkt  （リポジトリ root から）
 
 #lang htdp/bsl
 
 (require test-engine/racket-tests)
 
-;; ---- engine (ch04 と同型・BSL) ----
+;; ============================================================
+;; デザインレシピ順: データ定義 → interp. → 例 → テンプレ → スタブ → 本体/テスト
+;; ============================================================
 
+;; ------------------------------------------------------------
+;; データ: ListOfPosn（第3–4章と同じ・生存セル）
+;; ------------------------------------------------------------
+;; ListOfPosn is one of:
+;;  - empty
+;;  - (cons Posn ListOfPosn)
+;; interp. 今生きているセルの座標だけ。死は載せない。
+
+(define pattern-block
+  (list (make-posn 0 0) (make-posn 0 1)
+        (make-posn 1 0) (make-posn 1 1)))
+(define pattern-blinker
+  (list (make-posn 0 1) (make-posn 1 1) (make-posn 2 1)))
+(define pattern-beacon
+  (list (make-posn 0 0) (make-posn 0 1) (make-posn 1 0) (make-posn 1 1)
+        (make-posn 2 2) (make-posn 2 3) (make-posn 3 2) (make-posn 3 3)))
+(define pattern-glider
+  (list (make-posn 1 0) (make-posn 2 1)
+        (make-posn 0 2) (make-posn 1 2) (make-posn 2 2)))
+(define pattern-toad
+  (list (make-posn 1 0) (make-posn 2 0) (make-posn 3 0)
+        (make-posn 0 1) (make-posn 1 1) (make-posn 2 1)))
+(define pattern-pulsar
+  (list
+   (make-posn 2 0) (make-posn 3 0) (make-posn 4 0)
+   (make-posn 8 0) (make-posn 9 0) (make-posn 10 0)
+   (make-posn 0 2) (make-posn 5 2) (make-posn 7 2) (make-posn 12 2)
+   (make-posn 0 3) (make-posn 5 3) (make-posn 7 3) (make-posn 12 3)
+   (make-posn 0 4) (make-posn 5 4) (make-posn 7 4) (make-posn 12 4)
+   (make-posn 2 5) (make-posn 3 5) (make-posn 4 5)
+   (make-posn 8 5) (make-posn 9 5) (make-posn 10 5)
+   (make-posn 2 7) (make-posn 3 7) (make-posn 4 7)
+   (make-posn 8 7) (make-posn 9 7) (make-posn 10 7)
+   (make-posn 0 8) (make-posn 5 8) (make-posn 7 8) (make-posn 12 8)
+   (make-posn 0 9) (make-posn 5 9) (make-posn 7 9) (make-posn 12 9)
+   (make-posn 0 10) (make-posn 5 10) (make-posn 7 10) (make-posn 12 10)
+   (make-posn 2 12) (make-posn 3 12) (make-posn 4 12)
+   (make-posn 8 12) (make-posn 9 12) (make-posn 10 12)))
+
+;; テンプレート: ListOfPosn
+(define (listof-posn-template cells)
+  (cond
+    [(empty? cells) (...)]
+    [else
+     (... (first cells)
+          (listof-posn-template (rest cells)))]))
+
+;; スタブ例（コメント）
+;; (define (world->rows cells ox oy w h) empty)
+;; (define (next-generation cells) empty)
+
+;; ---- ルールエンジン（第4章と同型）----
+
+(: survives? (Number -> Boolean))
 (define (survives? neighbors)
   (or (= neighbors 2) (= neighbors 3)))
 
+(: births? (Number -> Boolean))
 (define (births? neighbors)
   (= neighbors 3))
 
+(: next-alive? (Boolean Number -> Boolean))
 (define (next-alive? currently-alive? neighbors)
   (if currently-alive?
       (survives? neighbors)
@@ -120,13 +179,17 @@
     [(empty? xs) 0]
     [else (+ 1 (my-length (rest xs)))]))
 
-;; ---- ASCII ----
+(define (union-cells a b)
+  (sort-cells (union-list a b)))
 
-;; char-at: ListOfPosn Number Number -> String  ("#" or ".")
+;; ---- ASCII（表示データ: 行のリスト = ListOf String）----
+;; RowString is String
+;; interp. 1行分の "#" と "." の並び
+;; ListOfString is one of: empty | (cons String ListOfString)
+
 (define (char-at live x y)
   (if (member-posn? (make-posn x y) live) "#" "."))
 
-;; row-from: ... build string for one row starting at ox, length width
 (define (row-from live ox y i width)
   (cond
     [(>= i width) ""]
@@ -142,51 +205,7 @@
 (define (world->rows cells origin-x origin-y width height)
   (rows-from cells origin-x origin-y 0 height width))
 
-;; 表示は副作用。BSL に begin が無いため、テスト対象は純粋な world->rows のみ。
-;; DrRacket 相互作用では (world->rows ...) の結果リストを目視する。
-
-;; ---- patterns ----
-
-(define pattern-block
-  (list (make-posn 0 0) (make-posn 0 1)
-        (make-posn 1 0) (make-posn 1 1)))
-
-(define pattern-blinker
-  (list (make-posn 0 1) (make-posn 1 1) (make-posn 2 1)))
-
-(define pattern-beacon
-  (list (make-posn 0 0) (make-posn 0 1) (make-posn 1 0) (make-posn 1 1)
-        (make-posn 2 2) (make-posn 2 3) (make-posn 3 2) (make-posn 3 3)))
-
-(define pattern-glider
-  (list (make-posn 1 0) (make-posn 2 1)
-        (make-posn 0 2) (make-posn 1 2) (make-posn 2 2)))
-
-(define pattern-toad
-  (list (make-posn 1 0) (make-posn 2 0) (make-posn 3 0)
-        (make-posn 0 1) (make-posn 1 1) (make-posn 2 1)))
-
-(define pattern-pulsar
-  (list
-   (make-posn 2 0) (make-posn 3 0) (make-posn 4 0)
-   (make-posn 8 0) (make-posn 9 0) (make-posn 10 0)
-   (make-posn 0 2) (make-posn 5 2) (make-posn 7 2) (make-posn 12 2)
-   (make-posn 0 3) (make-posn 5 3) (make-posn 7 3) (make-posn 12 3)
-   (make-posn 0 4) (make-posn 5 4) (make-posn 7 4) (make-posn 12 4)
-   (make-posn 2 5) (make-posn 3 5) (make-posn 4 5)
-   (make-posn 8 5) (make-posn 9 5) (make-posn 10 5)
-   (make-posn 2 7) (make-posn 3 7) (make-posn 4 7)
-   (make-posn 8 7) (make-posn 9 7) (make-posn 10 7)
-   (make-posn 0 8) (make-posn 5 8) (make-posn 7 8) (make-posn 12 8)
-   (make-posn 0 9) (make-posn 5 9) (make-posn 7 9) (make-posn 12 9)
-   (make-posn 0 10) (make-posn 5 10) (make-posn 7 10) (make-posn 12 10)
-   (make-posn 2 12) (make-posn 3 12) (make-posn 4 12)
-   (make-posn 8 12) (make-posn 9 12) (make-posn 10 12)))
-
-(define (union-cells a b)
-  (sort-cells (union-list a b)))
-
-;; Life 1.06 line parser
+;; Life 1.06 1行パーサ
 (define (first-space-index s i)
   (cond
     [(>= i (string-length s)) false]

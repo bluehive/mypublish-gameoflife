@@ -1,7 +1,7 @@
-;; Copyright (c) 2026 mevius
 ;; Licensed under the MIT License.
+;; See LICENSE file in the project root for full license text.
 ;; 第1章: 式と関数（Beginning Student / howtocode cheatsheet 準拠）
-;; CLI: racket code/ch01-basics.rkt
+;; CLI: racket code/ch01-basics.rkt  （リポジトリ root から）
 
 #lang htdp/bsl
 
