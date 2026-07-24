@@ -37,7 +37,7 @@
 | 第2章 | 再帰——Racketの核心 | [ch02-recursion.md](books/racket-game-of-life/ch02-recursion.md) | [ch02-recursion.rkt](code/ch02-recursion.rkt) | テンプレート駆動 + BSL |
 | 第3章 | データ構造——グリッドを表現する | [ch03-grid.md](books/racket-game-of-life/ch03-grid.md) | [ch03-grid.rkt](code/ch03-grid.rkt) | ドラフト + BSL（#3） |
 | 第4章 | ライフゲームのルールとセルオートマトン | [ch04-life-rules.md](books/racket-game-of-life/ch04-life-rules.md) | [ch04-life-rules.rkt](code/ch04-life-rules.rkt) | ドラフト + BSL（#3） |
-| 第5章 | 描画と対話——盤面を見る | [ch05-display.md](books/racket-game-of-life/ch05-display.md) | [ch05-display.rkt](code/ch05-display.rkt) | 骨格 + big-bang 発展（#3） |
+| 第5章 | 描画と対話——盤面を見る | [ch05-display.md](books/racket-game-of-life/ch05-display.md) | [ch05-display.rkt](code/ch05-display.rkt)（本線 BSL）、[ch05-display-isl.rkt](code/ch05-display-isl.rkt)（発展 ISL+） | 骨格 + big-bang / ISL+ 升目表示（#3） |
 | 付録 D | 環境構築 | [appendix-d-environment.md](books/racket-game-of-life/appendix-d-environment.md) | — | 独立 md（#3） |
 
 Zenn 公開中の章は `books/racket-game-of-life/config.yaml` の `chapters` のみ（現状: `intro`）。
