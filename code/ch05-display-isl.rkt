@@ -75,13 +75,13 @@
 (define (world->text cells origin-x origin-y width height)
   (rows->text (world->rows cells origin-x origin-y width height)))
 
-;; show-world: 盤を標準出力に升目として出す（副作用・学習用）
-;; write-file は 2htdp/batch-io。'stdout でターミナル／相互作用に出る。
-(define (show-world cells origin-x origin-y width height)
-  (write-file 'stdout
-              (string-append
-               (world->text cells origin-x origin-y width height)
-               "\n")))
+;; world-banner: 見出し付きの升目テキスト（1本の文字列）
+;; write-file は 2htdp/batch-io。'stdout でターミナルに出せる。
+(define (world-banner title cells origin-x origin-y width height)
+  (string-append title
+                 "\n"
+                 (world->text cells origin-x origin-y width height)
+                 "\n"))
 
 ;; ------------------------------------------------------------
 ;; テスト（データとしての正しさ）
@@ -118,10 +118,12 @@
 
 ;; ------------------------------------------------------------
 ;; デモ: 9×9 静止ブロックを升目表示
-;; （racket でこのファイルを実行すると、テストの前後に盤が出ます）
+;; （1回の write-file にまとめ、戻り値 'stdout の印字を1回に抑える）
 ;; ------------------------------------------------------------
-(write-file 'stdout ";; --- 9x9 still life (block near center) ---\n")
-(show-world block-9 0 0 9 9)
-(write-file 'stdout ";; --- end demo ---\n")
+(define DEMO-9x9
+  (world-banner ";; --- 9x9 still life (block near center) ---"
+                block-9 0 0 9 9))
+
+(write-file 'stdout (string-append DEMO-9x9 ";; --- end demo ---\n"))
 
 (test)

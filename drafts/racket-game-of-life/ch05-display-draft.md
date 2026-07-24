@@ -424,7 +424,7 @@ main の骨（イメージ。**本章の必須コードではない**）:
 - `pattern-block` / `pattern-blinker` / `pattern-glider` / `pattern-pulsar` など — 表示・テスト用パターン
 - `parse-life106-line` — ファイル1行分の簡易パーサ
 - `main` / `render-world`（発展） — big-bang 用の入口と描画の骨
-- `code/ch05-display-isl.rkt`（発展）— `rows->text` / `show-world` で 9×9 を改行表示（`#lang htdp/isl+`）
+- `code/ch05-display-isl.rkt`（発展）— `rows->text` / `world-banner` で 9×9 を改行表示（`#lang htdp/isl+`）
 
 - 表示はビューポート ＋ `"#"` / `"."` の行リスト
 - パターン名は第4章テストと共有する
