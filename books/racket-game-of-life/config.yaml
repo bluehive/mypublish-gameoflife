@@ -12,6 +12,8 @@ chapters:
   - ch03-grid.md
   - ch04-life-rules
   - ch05-display
+  - appendix-a-source-code.md
   - appendix-d-environment.md
+  - appendix-f-debug.md
 
 toc_depth: 2
