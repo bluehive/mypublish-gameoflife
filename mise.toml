@@ -39,6 +39,10 @@ shopt -s nullglob
 found=0
 for f in code/*.rkt; do
   [ -f "$f" ] || continue
+  # Sketching GUI sketches open a window — skip in batch tests (Issue #11)
+  case "$(basename "$f")" in
+    sketching-*.rkt) echo "=== skip GUI sketch: $f ==="; continue ;;
+  esac
   found=1
   echo "=== racket $f ==="
   racket "$f"

@@ -43,6 +43,18 @@ racket code/ch01-basics.rkt
   * **章**: 第5章・発展
   * **言語**: ISL+
   * **役割**: 升目の見やすい表示、グライダー世代 0〜8（任意）
+* **[life-engine.rkt](https://github.com/bluehive/mypublish-gameoflife/blob/main/code/life-engine.rkt)**
+  * **章**: 付録 H（プロトタイプ）
+  * **言語**: `#lang racket`（純ロジック・GUI なし）
+  * **役割**: 壁境界 B3/S23、グライダー配置、`next-generation/wall`（Issue #11）
+* **[life-engine-test.rkt](https://github.com/bluehive/mypublish-gameoflife/blob/main/code/life-engine-test.rkt)**
+  * **章**: 付録 H
+  * **言語**: `#lang racket` + **rackunit**
+  * **役割**: ルール・グライダー 3 機・壁死の自動テスト
+* **[sketching-gliders.rkt](https://github.com/bluehive/mypublish-gameoflife/blob/main/code/sketching-gliders.rkt)**
+  * **章**: 付録 H
+  * **言語**: `#lang racket` + `(require sketching)`
+  * **役割**: 60×40・緑スクエア・グリッド線・グライダー 3 機アニメ（要 `raco pkg install sketching`）
 
 ディレクトリそのもの:
 https://github.com/bluehive/mypublish-gameoflife/tree/main/code
@@ -58,3 +70,4 @@ https://github.com/bluehive/mypublish-gameoflife/tree/main/code
 - 章本文の目次: リポジトリ root の [README.md](https://github.com/bluehive/mypublish-gameoflife/blob/main/README.md)
 - 環境: [付録D](appendix-d-environment.md)
 - デバッグの手がかり: [付録F](appendix-f-debug.md)
+- Sketching アニメ（発展）: [付録H](appendix-h-sketching-life.md)
