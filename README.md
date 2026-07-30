@@ -64,10 +64,10 @@
   - 原稿: [appendix-f-debug.md](books/racket-game-of-life/appendix-f-debug.md)  
   - コード: —  
   - 状態: F.1 / F.3 / F.4 中心（#7）
-- **付録 H** — Sketching でライフゲームをアニメーション（プロトタイプ）  
+- **付録 H** — big-bang でライフゲームをアニメーション  
   - 原稿: [appendix-h-sketching-life.md](books/racket-game-of-life/appendix-h-sketching-life.md)  
-  - コード: [life-engine.rkt](code/life-engine.rkt)、[life-engine-test.rkt](code/life-engine-test.rkt)、[sketching-gliders.rkt](code/sketching-gliders.rkt)  
-  - 状態: **承認前プロトタイプ**（Issue #11）— 本編 BSL とは分離
+  - コード: [life-engine.rkt](code/life-engine.rkt)、[big-bang-gliders.rkt](code/big-bang-gliders.rkt)  
+  - 状態: **BSL + big-bang**（Issue #13）— 本編と同一言語
 
 Zenn 公開中の章は `books/racket-game-of-life/config.yaml` の `chapters` のみ（現状: `intro` など、config を正とする）。
 
@@ -93,7 +93,7 @@ Zenn 公開中の章は `books/racket-game-of-life/config.yaml` の `chapters` �
 - **E** 参考文献（O'Reilly『Racket』、[quick](https://docs.racket-lang.org/quick/) 等）
 - **F** デバッグ方法（入門）— **[appendix-f-debug.md](books/racket-game-of-life/appendix-f-debug.md)**（Issue #7）
 - **G** 三角関数チートシート（高校レベル・#30）
-- **H** Sketching ライフゲーム・アニメ（グライダー 3 機）— **[appendix-h-sketching-life.md](books/racket-game-of-life/appendix-h-sketching-life.md)**（Issue #11・承認前）
+- **H** big-bang ライフゲーム・アニメ（グライダー 3 機）— **[appendix-h-sketching-life.md](books/racket-game-of-life/appendix-h-sketching-life.md)**（Issue #13・BSL）
 
 ### 付録 F — デバッグ方法（メモ／本文は appendix-f）
 
