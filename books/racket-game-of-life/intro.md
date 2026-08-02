@@ -50,7 +50,7 @@ Java や Python などで最初に覚えることが多いのは次のような*
 
 5. 定義ウィンドウに式を書き **Run**。下の相互作用ウィンドウが REPL になる。
 
-付録 D（README の付録表）で Windows 11 向けを厚くする予定です。
+Windows 11 での詳しいインストール手順やつまずきやすい点は、**付録 D** を参照してください。
 
 #### 0.4 式と評価規則
 
@@ -183,6 +183,15 @@ howtocode / HtDP の精神を短くすると:
 - **データ** — 何を表すか（記述・解釈・例・テンプレ）
 - **関数** — 署名・目的・stub・例（`check-expect`）・テンプレ・本体・見直し
 
-詳細は第2章と [htdp_templates](https://howtocode.pages.dev/htdp_templates) を参照。
+詳細は第2章と [htdp_templates](https://howtocode.pages.dev/htdp_templates) を参照。今は「例を書いて確かめる」程度の理解で十分です。
+
+#### 0.7 この章のチェックリスト
+
+- [ ] DrRacket を起動し、言語レベルで **Beginning Student** を選べた
+- [ ] `(+ 1 2)` と斜辺の式 `(sqrt (+ (* 3 3) (* 4 4)))` を Run できた
+- [ ] ライフゲームが「セルの生死を短い規則で決めるシミュレーション」だと説明できる
+- [ ] 第1章で何を学ぶか（式・`define`・`cond`・関数・`check-expect`）が予告どおりと確認できた
+
+次は **第1章**: `define` / `cond` / リストで、実際にコードを書き始めます。
 
 > 参考文献: [howtocode.pages.dev](https://howtocode.pages.dev/)（構成と教え方を参照。文章は日本語で再執筆）
