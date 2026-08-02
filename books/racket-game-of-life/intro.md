@@ -183,7 +183,7 @@ howtocode / HtDP の精神を短くすると:
 - **データ** — 何を表すか（記述・解釈・例・テンプレ）
 - **関数** — 署名・目的・stub・例（`check-expect`）・テンプレ・本体・見直し
 
-詳細は第2章と [htdp_templates](https://howtocode.pages.dev/htdp_templates) を参照。今は「例を書いて確かめる」程度の理解で十分です。
+詳細は第2章と [htdp_templates](https://howtocode.pages.dev/htdp_templates) を参照。今は「例を書いて確かめる」程度の理解で十分です。**第1章ではデザインレシピの各ステップを、実際の関数を書きながら少しずつ使い始めます**(1.5 で最初の例、1.10 で全体を整理)。
 
 #### 0.7 この章のチェックリスト
 
