@@ -64,9 +64,9 @@
   (list (make-posn 1 1) (make-posn 1 2)
         (make-posn 2 1) (make-posn 2 2)))
 (define blinker-h
-  (list (make-posn 2 1) (make-posn 2 2) (make-posn 2 3)))
-(define blinker-v
   (list (make-posn 1 2) (make-posn 2 2) (make-posn 3 2)))
+(define blinker-v
+  (list (make-posn 2 1) (make-posn 2 2) (make-posn 2 3)))
 (define glider
   (list (make-posn 1 0) (make-posn 2 1)
         (make-posn 0 2) (make-posn 1 2) (make-posn 2 2)))
