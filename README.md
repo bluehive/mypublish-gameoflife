@@ -68,6 +68,10 @@
   - 原稿: [appendix-h-sketching-life.md](books/racket-game-of-life/appendix-h-sketching-life.md)  
   - コード: [life-engine.rkt](code/life-engine.rkt)、[big-bang-gliders.rkt](code/big-bang-gliders.rkt)  
   - 状態: **BSL + big-bang**（Issue #13）— 本編と同一言語
+- **付録 I** — BSL の意味論メモ  
+  - 原稿: [appendix-i-bsl-semantics.md](books/racket-game-of-life/appendix-i-bsl-semantics.md)  
+  - コード: —  
+  - 状態: 独立 md（#20）
 
 Zenn 公開中の章は `books/racket-game-of-life/config.yaml` の `chapters` のみ（現状: `intro` など、config を正とする）。
 
@@ -94,6 +98,7 @@ Zenn 公開中の章は `books/racket-game-of-life/config.yaml` の `chapters` �
 - **F** デバッグ方法（入門）— **[appendix-f-debug.md](books/racket-game-of-life/appendix-f-debug.md)**（Issue #7）
 - **G** 三角関数チートシート（高校レベル・#30）
 - **H** big-bang ライフゲーム・アニメ（グライダー 3 機）— **[appendix-h-sketching-life.md](books/racket-game-of-life/appendix-h-sketching-life.md)**（Issue #13・BSL）
+- **I** BSL の意味論メモ（`define` の裏側・置換モデル）— **[appendix-i-bsl-semantics.md](books/racket-game-of-life/appendix-i-bsl-semantics.md)**（Issue #20）
 
 ### 付録 F — デバッグ方法（メモ／本文は appendix-f）
 
