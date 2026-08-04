@@ -16,5 +16,6 @@ chapters:
   - appendix-d-environment.md
   - appendix-f-debug.md
   - appendix-h-sketching-life.md
+  - appendix-i-bsl-semantics.md
 
 toc_depth: 2
