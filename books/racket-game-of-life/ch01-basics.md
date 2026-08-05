@@ -72,7 +72,7 @@ BSL（Beginning Student）では、`(define (名前 引数…) …)` の形に**
 
 `cond` は上から順に条件を見て、**最初に真になった枝だけ**を使います。`else` は「上の条件がどれも当てはまらなかったときの**残り全部**」という枝です。
 
-なぜ `else` を最後に置くのでしょう？ それは `cond` が「上から順に試す」からです。もし `[else …]` を先頭に置くと、いつもそこに入ってしまい、下の条件は一度も試されません（書いても意味がなくなります）。Scratch の「もし〜なら／でなければ」を何段にも重ねた感じ——具体的な場合を上に並べ、最後に逃げ道の `else`——が `cond` の基本形です。
+なぜ `else` を最後に置くのでしょう？ それは `cond` が「上から順に試す」からです。もし `[else …]` を先頭に置くと、いつもそこに入ってしまい、下の条件は一度も試されません（書いても意味がなくなります）。具体的な場合を上から順に書き、どれにも当てはまらないときの逃げ道を最後の `else` に置く——それが `cond` の基本形です。
 
 ライフ規則の1セル分（応用）:
 
@@ -384,4 +384,4 @@ DrRacket なら同ファイルを開いて Run。すべて通れば、1.1〜1.8 
 
 - [howtocode — Syntax Cheat Sheet](https://howtocode.pages.dev/cheatsheet)  
 - [howtocode — Templates](https://howtocode.pages.dev/htdp_templates)  
-- [BSL ドキュメント](https://docs.racket-lang.org/htdp-langs/beginner.html)  
+- [BSL ドキュメント](https://docs.racket-lang.org/htdp-langs/beginner.html)
