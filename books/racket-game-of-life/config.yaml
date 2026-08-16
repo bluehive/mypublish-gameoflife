@@ -17,5 +17,6 @@ chapters:
   - appendix-f-debug.md
   - appendix-h-sketching-life.md
   - appendix-i-bsl-semantics.md
+  - appendix-j-lisp-syntax.md
 
 toc_depth: 2

@@ -72,6 +72,10 @@
   - 原稿: [appendix-i-bsl-semantics.md](books/racket-game-of-life/appendix-i-bsl-semantics.md)  
   - コード: —  
   - 状態: 独立 md（#20）
+- **付録 J** — Lisp構文は「発明」ではなく「発見」である  
+  - 原稿: [appendix-j-lisp-syntax.md](books/racket-game-of-life/appendix-j-lisp-syntax.md)  
+  - コード: —  
+  - 状態: 独立 md（#24）・序章コラムからリンク
 
 Zenn 公開中の章は `books/racket-game-of-life/config.yaml` の `chapters` のみ（現状: `intro` など、config を正とする）。
 
@@ -83,7 +87,7 @@ Zenn 公開中の章は `books/racket-game-of-life/config.yaml` の `chapters` �
 3. **第3章** — グリッド表現（ListOfPosn / 密グリッド）
 4. **第4章** — B3/S23・`next-generation`・パターン `check-expect`
 5. **第5章** — ASCII・パターンカタログ・big-bang 発展  
-付録 **A–H** — 下記。**A / D / F / H は独立 md**（B/C/E/G は予定またはメモ）
+付録 **A–J** — 下記。**A / D / F / H / I / J は独立 md**（B/C/E/G は予定またはメモ）
 
 ## 付録（予定）
 
@@ -99,6 +103,7 @@ Zenn 公開中の章は `books/racket-game-of-life/config.yaml` の `chapters` �
 - **G** 三角関数チートシート（高校レベル・#30）
 - **H** big-bang ライフゲーム・アニメ（グライダー 3 機）— **[appendix-h-sketching-life.md](books/racket-game-of-life/appendix-h-sketching-life.md)**（Issue #13・BSL）
 - **I** BSL の意味論メモ（`define` の裏側・置換モデル）— **[appendix-i-bsl-semantics.md](books/racket-game-of-life/appendix-i-bsl-semantics.md)**（Issue #20）
+- **J** Lisp構文は「発明」ではなく「発見」である（思考実験・序章コラムから）— **[appendix-j-lisp-syntax.md](books/racket-game-of-life/appendix-j-lisp-syntax.md)**（Issue #24）
 
 ### 付録 F — デバッグ方法（メモ／本文は appendix-f）
 
@@ -124,6 +129,9 @@ Zenn 公開中の章は `books/racket-game-of-life/config.yaml` の `chapters` �
 - [#30](https://github.com/bluehive/my-grok-task-2026/issues/30)  
   - 取り込み先: 付録G 等  
   - 内容: 数学可視化メモ
+- [#24](https://github.com/bluehive/mypublish-gameoflife/issues/24)  
+  - 取り込み先: 序章コラム・付録J  
+  - 内容: Lisp構文は発明ではなく発見（stopa.io/post/265 の流れ）
 
 ## 言語方針: Beginning Student (BSL)
 
