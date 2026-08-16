@@ -29,8 +29,29 @@
 | Clojure 種明かし | Racket/BSL の `define` を主、Clojure は一文 |
 | 発明ではなく発見 | J.4。より良い表面があり得ると残す |
 
+## Grok 司書 R2（三角ロジック）
+
+R2 完了。表は pro 指摘（データ欄の結論混入・ワラントの断定）を優先して採用。タイトル YAML は Issue 文言のまま残し、主張欄だけ「見える」に弱めた。
+
+## pro 批判（9件）→ 反映
+
+出典: `~/.hermes/cache/delegation/subagent-summary-0-20260816_204251_421885.txt`
+
+1. 付録I「名前と機械」→ I.3 手続きオブジェクト
+2. タイトル断定 → YAML は Issue どおり。主張・J.4 は留保
+3. ワラント「いちばん単純」→ 思考実験の範囲・代表格
+4. 角括弧は「別物」と「同じ家族」の揺れ → 命令カードの書き方／Racket では [] と () は同義
+5. 規則2に「先頭は関数として探す」
+6. 記号 vs `"blue"` の区別
+7. racket 例で `do` が消える理由
+8. データ欄を事実に絞る
+9. 「BSL を選ぶ理由」の後付けを削除
+
+欠けていたゲスト比喩・unless 図・構造編集の枝操作を J.2 に短く足した。字数計測は「かな漢字」を本文目安と注記。反映後 jp≈2129。
+
 ## git
 
 - 作業ブランチ: `experimental/20260816-appendix-j-lisp-syntax`
 - stash: `wip intro.md unrelated (issue24 作業に混ぜない)`
 - `.grok/` は untracked のまま載せない
+- PR: https://github.com/bluehive/mypublish-gameoflife/pull/25
